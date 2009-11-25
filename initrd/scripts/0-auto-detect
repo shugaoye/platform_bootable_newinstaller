@@ -79,6 +79,17 @@ asus_info()
 	esac
 }
 
+samsung_info()
+{
+	[ -c /dev/fb0 ] || FB0DEV=i915
+	EXTMOD=
+	PREDEV=snd-hda-codec-realtek mii
+	SNDDEV=snd-hda-intel
+	CAMDEV=gspca_vc032x
+	WIFDEV=ath5k
+	LANDEV=b44
+}
+
 vbox_info()
 {
 	LANDEV=pcnet32
@@ -104,6 +115,9 @@ detect_hardware()
 	case "`cat /sys/class/dmi/id/uevent`" in
 		*ASUSTeK*)
 			get_info=asus_info
+			;;
+		*SAMSUNG*)
+			get_info=samsung_info
 			;;
 		*Acer*AO*)
 			get_info=ao_info
