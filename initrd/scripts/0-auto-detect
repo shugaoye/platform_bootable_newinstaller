@@ -82,8 +82,8 @@ asus_info()
 samsung_info()
 {
 	[ -c /dev/fb0 ] || FB0DEV=i915
-	EXTMOD=
-	PREDEV=snd-hda-codec-realtek mii
+	EXTMOD=hso
+	PREDEV=snd-hda-codec-realtek mii rfkill
 	SNDDEV=snd-hda-intel
 	CAMDEV=gspca_vc032x
 	WIFDEV=ath5k
