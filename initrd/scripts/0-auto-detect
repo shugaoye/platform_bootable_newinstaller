@@ -164,6 +164,7 @@ find_network_dev_name()
 load_modules()
 {
 	if [ -n "$FOUND" ]; then
+		EXTMOD="$EXTMOD cdc-acm option pppoe ppp-async ppp-deflate bsd-comp"
 		BTDEV="bnep rfcomm sco btusb"
 		for m in $PREDEV $EXTMOD $BTDEV; do
 			modprobe $m
