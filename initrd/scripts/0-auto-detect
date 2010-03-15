@@ -1,6 +1,6 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2009/08/14
+# Last updated 2010/03/15
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -55,17 +55,38 @@ asus_info()
 			LANDEV=atl1e
 			WIFDEV=rt2860sta
 			;;
+		1005HA*)
+			LANDEV=atl1c
+			WIFDEV=ath9k
+			;;
 		ET1602*)
-			FB0DEV=
-			UVESA_MODE=${UVESA_MODE:-1366x768}
+			# i915 is buggy on 2.6.29
+			if uname -r | grep -q 2.6.29; then
+				FB0DEV=
+				UVESA_MODE=${UVESA_MODE:-1366x768}
+			fi
 			LANDEV=r8169
 			WIFDEV=rt2860sta
+			BOARD_USES_TSLIB=true
+			;;
+		ET2002*)
+			FB0DEV=
+			UVESA_MODE=${UVESA_MODE:-1600x900}
+			LANDEV=r8169
+			WIFDEV=ath9k
+			BOARD_USES_TSLIB=true
 			;;
 		T91)
 			FB0DEV=
 			UVESA_MODE=${UVESA_MODE:-1024x600}
 			LANDEV=atl1e
 			WIFDEV=ath9k
+			BOARD_USES_TSLIB=true
+			;;
+		T101)
+			LANDEV=atl1e
+			WIFDEV=ath9k
+			BOARD_USES_TSLIB=true
 			;;
 		A6VM*)
 			EXTMOD=asus-laptop
