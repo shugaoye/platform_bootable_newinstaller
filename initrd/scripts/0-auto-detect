@@ -115,7 +115,6 @@ vbox_info()
 {
 	LANDEV=pcnet32
 	SNDDEV="snd-sb16 isapnp=0 irq=5"
-	VESA=1
 }
 
 qemu_info()
