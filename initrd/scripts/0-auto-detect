@@ -111,6 +111,14 @@ samsung_info()
 	LANDEV=b44
 }
 
+s5_info()
+{
+	PREDEV=snd-hda-codec-realtek
+	SNDDEV=snd-hda-intel
+	[ -c /dev/fb0 ] || FB0DEV=psb
+	WIFDEV=libertas_sdio
+}
+
 vbox_info()
 {
 	LANDEV=pcnet32
@@ -152,6 +160,13 @@ detect_hardware()
 			get_info=vmware_info
 			;;
 		*)
+			case "$androidboot_hardware" in
+				*s5*)
+					get_info=s5_info
+					;;
+				*)
+					;;
+			esac
 			;;
 	esac
 	[ -n "$get_info" ] && $get_info && FOUND=1
@@ -189,7 +204,12 @@ load_modules()
 		for m in $PREDEV $EXTMOD $BTDEV; do
 			modprobe $m
 		done
-		[ -n "$FB0DEV" -a -z "$UVESA_MODE" ] && modprobe $FB0DEV
+		[ a"$FB0DEV" == "apsb" ] && modprobe i2c-algo-bit
+		[ a"$FB0DEV" == "apsb" ] && insmod /system/lib/modules/drm.ko
+		[ a"$FB0DEV" == "apsb" ] && mkdir -p /lib/firmware
+		[ a"$FB0DEV" == "apsb" ] && cp /system/lib/firmware/msvdx_fw.bin /lib/firmware/
+		[ a"$FB0DEV" == "apsb" ] && insmod /system/lib/modules/psb.ko
+		[ a"$FB0DEV" != "apbs" -a -n "$FB0DEV" -a -z "$UVESA_MODE" ] && modprobe $FB0DEV
 		[ -n "$LANDEV" ] && modprobe $LANDEV
 		[ -n "$WIFDEV" ] && modprobe $WIFDEV
 		[ -n "$SNDDEV" ] && modprobe $SNDDEV
