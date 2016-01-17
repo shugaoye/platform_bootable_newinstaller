@@ -26,25 +26,6 @@ load_uvesafb()
 	[ -c /dev/fb0 ] || modprobe uvesafb mode_option=${UVESA_MODE:-800x600}-16 ${UVESA_OPTION:-mtrr=3 scroll=redraw}
 }
 
-find_network_dev_name()
-{
-	INITRC=init.x86.rc
-	DHCPCD="/system/bin/dhcpcd -o domain_name_servers"
-	rmline=`grep -n "#REMOVE FROM HERE" $INITRC | cut -d':' -f1`
-	rmline=`expr $rmline + 1`
-	sed -i -e "$rmline,\$d" $INITRC
-	for netdev in `ls /sys/class/net`; do
-		case "$netdev" in
-			lo|ip6tnl*|sit*|tun*|eth0|wlan0|wmaster*)
-				;;
-			*)
-				echo -e "\nservice dhcpcd_$netdev $DHCPCD -ABDKL\n    class main\n    disabled\n    oneshot\n" >> $INITRC
-				echo -e "service iprenew_$netdev $DHCPCD -n\n    class main\n    disabled\n    oneshot" >> $INITRC
-				;;
-		esac
-	done
-}
-
 load_modules()
 {
 	if [ -n "$FOUND" ]; then
