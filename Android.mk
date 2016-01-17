@@ -80,7 +80,7 @@ $(INSTALL_RAMDISK): $(wildcard $(LOCAL_PATH)/install/*/* $(LOCAL_PATH)/install/*
 	$(MKBOOTFS) $(dir $(dir $(<D))) | gzip -9 > $@
 
 boot_dir := $(PRODUCT_OUT)/boot
-$(boot_dir): $(wildcard $(LOCAL_PATH)/boot/isolinux/*) $(systemimg) $(GENERIC_X86_CONFIG_MK) | $(ACP)
+$(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(systemimg) $(GENERIC_X86_CONFIG_MK) | $(ACP)
 	$(hide) rm -rf $@
 	$(ACP) -pr $(dir $(<D)) $@
 
