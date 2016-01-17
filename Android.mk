@@ -36,27 +36,6 @@ define build-squashfs-target
 endef
 endif
 
-define check-density
-	eval d=$$(grep ^ro.sf.lcd_density $(INSTALLED_DEFAULT_PROP_TARGET) $(INSTALLED_BUILD_PROP_TARGET) | sed 's|\(.*\)=\(.*\)|\2|'); \
-	[ -z "$$d" ] || ( awk -v d=$$d ' BEGIN { \
-		if (d <= 180) { \
-			label="liveh"; dpi="HDPI"; \
-		} else { \
-			label="livem"; dpi="MDPI"; \
-		} \
-	} { \
-		if (match($$2, label)) \
-			s=5; \
-		else if (match($$0, dpi)) \
-			s=4; \
-		else \
-			s=0; \
-		for (i = 0; i < s; ++i) \
-			getline; \
-		gsub(" DPI=[0-9]*",""); print $$0; \
-	}' $(1) > $(1)_ && mv $(1)_ $(1) )
-endef
-
 initrd_dir := $(LOCAL_PATH)/initrd
 initrd_bin := \
 	$(initrd_dir)/init \
@@ -90,7 +69,6 @@ BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_
 ISO_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).iso
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	@echo ----- Making iso image ------
-	$(hide) $(call check-density,$</isolinux/isolinux.cfg)
 	$(hide) sed -i "s|\(Installation CD\)\(.*\)|\1 $(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</isolinux/isolinux.cfg
 	$(hide) sed -i "s|VER|$(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</boot/grub/grub.cfg
 	$(hide) cp -r $(<D)/../../../../bootable/newinstaller/install/grub2/efi $</efi
