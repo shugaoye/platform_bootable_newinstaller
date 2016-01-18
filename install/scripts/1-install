@@ -194,9 +194,9 @@ create_img()
 		rm -f $2
 	fi
 	dialog --title " Question " --nook --nocancel --inputbox \
-		"\nPlease input the size of the $bname in MB (max 2047):" 8 63 $1 2> $tempfile
+		"\nPlease input the size of the $bname in MB:" 8 63 $1 2> $tempfile
 	size=`cat $tempfile`
-	[ 0$size -le 0 -o 0$size -gt 2047 ] && size=2047
+	[ 0$size -le 0 ] && size=1024
 	( dd bs=1M count=$size if=/dev/zero | pv -ns ${size}m | dd of=$2 ) 2>&1 \
 		| progress_bar "Creating $bname" "Expect to write $size MB..."
 }
