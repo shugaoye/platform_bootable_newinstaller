@@ -283,9 +283,10 @@ install_to()
 	if [ $? -eq 0 ]; then
 		get_part_info $1
 		for i in /sys/block/$disk/$disk*; do
-			[ 0`cat $i/partition` -eq 1 ] && break
+			[ 0`cat $i/partition` -eq 1 ] && b=$i
+			[ $(blkid /dev/`basename $i` | grep -c vfat) -ne 0 ] && b=$i && break
 		done
-		boot=`basename $i`
+		boot=`basename $b`
 		mountpoint -q /hd && umount /hd
 		dialog --title " Confirm " --defaultno --yesno \
 			"\n Do you want to format the boot partition\n /dev/$boot?" 8 45
