@@ -291,7 +291,12 @@ install_to()
 		dialog --title " Confirm " --defaultno --yesno \
 			"\n Do you want to format the boot partition\n /dev/$boot?" 8 45
 		[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
-		try_mount rw /dev/$boot /hd
+		while [ 1 ]; do
+			try_mount rw /dev/$boot /hd && break
+			dialog --title " Confirm " --yesno \
+			"\n Cannot mount /dev/$boot\n Do you want to format it?" 8 37
+			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
+		done
 		cp -af /grub2/efi /hd
 		mkdir -p /hd/boot/grub
 		grubcfg=/hd/boot/grub/grub.cfg
