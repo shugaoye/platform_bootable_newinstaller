@@ -59,9 +59,10 @@ $(INSTALL_RAMDISK): $(wildcard $(LOCAL_PATH)/install/*/* $(LOCAL_PATH)/install/*
 	$(MKBOOTFS) $(dir $(dir $(<D))) | gzip -9 > $@
 
 boot_dir := $(PRODUCT_OUT)/boot
-$(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(systemimg) $(GENERIC_X86_CONFIG_MK) | $(ACP)
+$(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(systemimg) $(INSTALL_RAMDISK) $(GENERIC_X86_CONFIG_MK) | $(ACP)
 	$(hide) rm -rf $@
 	$(ACP) -pr $(dir $(<D)) $@
+	$(ACP) -pr $(dir $(<D))../install/grub2/efi $@
 
 BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,ramdisk.img initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
@@ -71,7 +72,6 @@ $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	@echo ----- Making iso image ------
 	$(hide) sed -i "s|\(Installation CD\)\(.*\)|\1 $(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</isolinux/isolinux.cfg
 	$(hide) sed -i "s|VER|$(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</boot/grub/grub.cfg
-	$(hide) cp -r $(<D)/../../../../bootable/newinstaller/install/grub2/efi $</efi
 	genisoimage -vJURT -b isolinux/isolinux.bin -c isolinux/boot.cat \
 		-no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
 		-input-charset utf-8 -V "Android-x86 LiveCD" -o $@ $^
