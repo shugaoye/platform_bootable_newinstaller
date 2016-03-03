@@ -1,6 +1,6 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2016/01/23
+# Last updated 2016/03/03
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -17,7 +17,7 @@ auto_detect()
 	echo 'esac; done; }' >> $tmp
 	sed -i '/brcmfmac/d' $tmp
 	source $tmp
-	cat /sys/bus/*/devices/*/modalias | dev2mod
+	cat /sys/bus/*/devices/*/uevent | grep MODALIAS | sed 's/^MODALIAS=//' | sort -u | dev2mod
 	cat /sys/devices/virtual/wmi/*/modalias | dev2mod
 }
 
