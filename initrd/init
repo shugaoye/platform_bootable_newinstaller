@@ -169,7 +169,7 @@ if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
 fi
 
 # ensure keyboard driver is loaded
-[ -n "$INSTALL" -o -n "$DEBUG" ] && busybox modprobe atkbd
+[ -n "$INSTALL" -o -n "$DEBUG" ] && busybox modprobe -a atkbd hid-apple
 
 if [ 0$DEBUG -gt 0 ]; then
 	echo -e "\nType 'exit' to continue booting...\n"
