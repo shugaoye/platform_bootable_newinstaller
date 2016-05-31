@@ -27,12 +27,10 @@ VER ?= $(shell date +"%F")
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)
-MKSQUASHFS = $(shell which mksquashfs)
+MKSQUASHFS := $(MAKE_SQUASHFS)
 
 define build-squashfs-target
-	$(if $(shell $(MKSQUASHFS) -version | grep "version [0-3].[0-9]"),\
-		$(error Your mksquashfs is too old to work with kernel 2.6.29. Please upgrade to squashfs-tools 4.0))
-	$(hide) $(MKSQUASHFS) $(1) $(2) -noappend
+	$(hide) $(MKSQUASHFS) $(1) $(2) -noappend -comp gzip
 endef
 endif
 
@@ -42,6 +40,7 @@ initrd_bin := \
 	$(wildcard $(initrd_dir)/*/*)
 
 systemimg  := $(PRODUCT_OUT)/system.$(if $(MKSQUASHFS),sfs,img)
+$(if $(MKSQUASHFS),$(systemimg): | $(MKSQUASHFS))
 
 INITRD_RAMDISK := $(PRODUCT_OUT)/initrd.img
 $(INITRD_RAMDISK): $(initrd_bin) $(systemimg) $(TARGET_INITRD_SCRIPTS) | $(ACP) $(MKBOOTFS)
