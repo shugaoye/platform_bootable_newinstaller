@@ -114,6 +114,18 @@ progress_bar()
 	dialog --clear --title " $1 " --gauge "\n $2" 8 70
 }
 
+convert_fs()
+{
+	if blkid /dev/$1 | grep -q ext2; then
+		/system/bin/tune2fs -j /dev/$1
+		e2fsck -fy /dev/$1
+	fi
+	if blkid /dev/$1 | grep -q ext3; then
+		/system/bin/tune2fs -O extents,uninit_bg /dev/$1
+		e2fsck -fy /dev/$1
+	fi
+}
+
 format_fs()
 {
 	local cmd
@@ -147,6 +159,10 @@ format_fs()
 			if (match($0, "done"))
 				printf("%d\n", i+=33)
 		}' | progress_bar "Formatting" "Formatting partition $1..."
+	elif blkid /dev/$1 | grep -q ext[23]; then
+		dialog --clear --title " Warning " --yesno \
+			"\nYou chose to install android-x86 to an ext2/3 filesystem. We suggest you convert it to ext4 for better reliability and performance." 9 62
+		[ $? -eq 0 ] && convert_fs $1
 	fi
 }
 
@@ -182,6 +198,17 @@ create_winitem()
 		wp=$((`echo $win | cut -b4-`-1))
 		echo -e "title Windows\n\trootnoverify (hd$d,$wp)\n\tchainloader +1\n" >> $menulst
 	fi
+}
+
+check_data_img()
+{
+	losetup /dev/loop7 data.img
+	if blkid /dev/loop7 | grep -q ext[23]; then
+		dialog --clear --title " Warning " --yesno \
+			"\nYour data.img is an ext2/3 filesystem. We suggest you convert it to ext4 for better reliability." 8 58
+		[ $? -eq 0 ] && convert_fs loop7
+	fi
+	losetup -d /dev/loop7
 }
 
 create_img()
@@ -351,7 +378,7 @@ install_to()
 
 		case "$fs" in
 			vfat|fuseblk)
-				create_data_img
+				[ -e data.img ] && check_data_img || create_data_img
 				;;
 			*)
 				mkdir -p data
