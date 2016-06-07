@@ -129,17 +129,11 @@ convert_fs()
 format_fs()
 {
 	local cmd
-	echo -e '"Do not format" ""\next4 ""\next3 ""\next2 ""\nntfs ""\nfat32 ""' > $menufile
+	echo -e '"Do not format" ""\next4 ""\nntfs ""\nfat32 ""' > $menufile
 	choose "Choose filesystem" "Please select a filesystem to format $1:"
 	case "$choice" in
 		ext4)
 			cmd="make_ext4fs -L"
-			;;
-		ext3)
-			cmd="mke2fs -jL"
-			;;
-		ext2)
-			cmd="mke2fs -L"
 			;;
 		ntfs)
 			cmd="mkntfs -fL"
