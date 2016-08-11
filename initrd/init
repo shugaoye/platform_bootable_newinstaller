@@ -65,7 +65,7 @@ try_mount()
 		RW="nolock,$RW"
 	fi
 	# FIXME: any way to mount ntfs gracefully?
-	mount -o $RW $@ || mount.ntfs-3g -o rw,force $@
+	mount -o $RW,noatime $@ || mount.ntfs-3g -o rw,force $@
 }
 
 check_root()
@@ -89,11 +89,11 @@ check_root()
 	fi
 	zcat /mnt/$SRC/ramdisk.img | cpio -id > /dev/null
 	if [ -e /mnt/$SRC/system.sfs ]; then
-		mount -o loop /mnt/$SRC/system.sfs /sfs
-		mount -o loop /sfs/system.img system
+		mount -o loop,noatime /mnt/$SRC/system.sfs /sfs
+		mount -o loop,noatime /sfs/system.img system
 	elif [ -e /mnt/$SRC/system.img ]; then
 		remount_rw
-		mount -o loop /mnt/$SRC/system.img system
+		mount -o loop,noatime /mnt/$SRC/system.img system
 	elif [ -d /mnt/$SRC/system ]; then
 		remount_rw
 		mount --bind /mnt/$SRC/system system

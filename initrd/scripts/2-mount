@@ -13,13 +13,13 @@ mount_data()
 	[ -n "$DATA" ] && blk=`basename $DATA` || blk=
 	if [ -b "/dev/$blk" ]; then
 		[ ! -e /dev/block/$blk ] && ln /dev/$blk /dev/block
-		mount /dev/block/$blk data
+		mount -o noatime /dev/block/$blk data
 	elif [ -d /mnt/$SRC/data ]; then
 		remount_rw
 		mount --bind /mnt/$SRC/data data
 	elif [ -f /mnt/$SRC/data.img ]; then
 		remount_rw
-		mount -o loop /mnt/$SRC/data.img data
+		mount -o loop,noatime /mnt/$SRC/data.img data
 	else
 		device_mount_data || mount -t tmpfs tmpfs data
 	fi
