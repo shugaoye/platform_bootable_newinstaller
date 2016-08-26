@@ -23,7 +23,8 @@ LOCAL_STATIC_LIBRARIES := libdiskconfig_host libcutils liblog
 edit_mbr := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
 include $(BUILD_HOST_EXECUTABLE)
 
-VER ?= $(shell date +"%F")
+# VER ?= $(shell date +"%F")
+VER ?= x86vbox
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)
@@ -95,9 +96,10 @@ $(EFI_IMAGE): $(wildcard $(LOCAL_PATH)/boot/boot/*/*) $(BUILT_IMG) $(ESP_LAYOUT)
 	$(hide) cat /dev/null > $@; $(edit_mbr) -l $(ESP_LAYOUT) -i $@ esp=$@.fat
 	$(hide) rm -f $@.fat
 
-.PHONY: iso_img usb_img efi_img
+.PHONY: iso_img usb_img efi_img initrd
 iso_img: $(ISO_IMAGE)
 usb_img: $(ISO_IMAGE)
 efi_img: $(EFI_IMAGE)
+initrd:  $(BUILT_IMG)
 
 endif

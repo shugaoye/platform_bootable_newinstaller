@@ -89,12 +89,15 @@ check_root()
 	fi
 	zcat /mnt/$SRC/ramdisk.img | cpio -id > /dev/null
 	if [ -e /mnt/$SRC/system.sfs ]; then
+	    echo "Found system.sfs"
 		mount -o loop /mnt/$SRC/system.sfs /sfs
 		mount -o loop /sfs/system.img system
 	elif [ -e /mnt/$SRC/system.img ]; then
+	    echo "Found system.img"
 		remount_rw
 		mount -o loop /mnt/$SRC/system.img system
 	elif [ -d /mnt/$SRC/system ]; then
+	    echo "Found /mnt/$SRC/system"
 		remount_rw
 		mount --bind /mnt/$SRC/system system
 	else
@@ -127,6 +130,7 @@ debug_shell()
 
 echo -n Detecting Android-x86...
 
+    
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
 
 for c in `cat /proc/cmdline`; do
@@ -140,6 +144,13 @@ for c in `cat /proc/cmdline`; do
 done
 
 mount -t tmpfs tmpfs /android
+
+# Fix the mount point issue temporarily
+# echo "Creating mount points ..."
+# /bin/busybox ls /android
+# /bin/busybox mkdir -p /android/dev /android/proc /android/sys /android/system /android/data /android/oem
+# Remove the above later
+
 cd /android
 while :; do
 	for device in ${ROOT:-/dev/[hmsv][dmr][0-9a-z]*}; do
