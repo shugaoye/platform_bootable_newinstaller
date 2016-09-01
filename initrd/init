@@ -172,7 +172,7 @@ fi
 if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
 	mv /bin /lib .
 	sed -i 's|\( PATH.*\)|\1:/bin|' init.environ.rc
-	rm /sbin/modprobe
+#	rm /sbin/modprobe
 	busybox mv /sbin/* sbin
 	rmdir /sbin
 	ln -s android/bin android/lib android/sbin /
