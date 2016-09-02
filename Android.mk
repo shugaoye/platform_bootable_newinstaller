@@ -101,5 +101,6 @@ iso_img: $(ISO_IMAGE)
 usb_img: $(ISO_IMAGE)
 efi_img: $(EFI_IMAGE)
 initrd:  $(BUILT_IMG)
+systemimg: $(boot_dir) $(BUILT_IMG)
 
 endif

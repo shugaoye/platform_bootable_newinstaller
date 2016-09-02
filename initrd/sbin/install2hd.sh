@@ -13,12 +13,13 @@ export X86IMAGE_SRC=/mnt$SRC
 export X86IMAGE_DST=/hd$SRC
 
 mount /dev/sda1 /hd
-rm -rf $X86IMAGE_DST/system.img $X86IMAGE_DST/initrd.img $X86IMAGE_DST/ramdisk.img $X86IMAGE_DST/kernel
+rm -rf $X86IMAGE_DST/system.img $X86IMAGE_DST/initrd.img $X86IMAGE_DST/ramdisk.img $X86IMAGE_DST/kernel $X86IMAGE_DST/data
 ls $X86IMAGE_DST
 cp $X86IMAGE_SRC/initrd.img $X86IMAGE_DST/initrd.img
 cp $X86IMAGE_SRC/ramdisk.img $X86IMAGE_DST/ramdisk.img
 cp $X86IMAGE_SRC/kernel $X86IMAGE_DST/kernel
 cp $X86IMAGE_SRC/system.img $X86IMAGE_DST/system.img
+cp -a $X86IMAGE_SRC/data $X86IMAGE_DST/
 echo "Upgraded successfully."
 ls $X86IMAGE_DST
 
