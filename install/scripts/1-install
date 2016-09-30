@@ -285,7 +285,8 @@ install_to()
 	cmdline=`sed "s|\(initrd.*img\s*\)||; s|quiet\s*||; s|\(vga=\w\+\?\s*\)||; s|\(DPI=\w\+\?\s*\)||; s|\(INSTALL=\w\+\?\s*\)||; s|\(SRC=\S\+\?\s*\)||; s|\(DEBUG=\w\+\?\s*\)||; s|\(BOOT_IMAGE=\S\+\?\s*\)||; s|\(iso-scan/filename=\S\+\?\s*\)||;" /proc/cmdline`
 
 	asrc=android-$VER
-	dialog --title " Confirm " --no-label Skip --defaultno --yesno \
+	efi="`dmesg | grep EFI.VGA`"
+	[ -z "$efi" ] && dialog --title " Confirm " --no-label Skip --defaultno --yesno \
 		"\n Do you want to install boot loader GRUB?" 7 47
 	if [ $? -eq 0 ]; then
 		cp -af /grub /hd
@@ -299,7 +300,7 @@ install_to()
 		[ $? -ne 0 ] && return 255
 	fi
 
-	dialog --title " Confirm " --no-label Skip --defaultno --yesno \
+	[ -n "$efi" ] && dialog --title " Confirm " --no-label Skip --defaultno --yesno \
 		"\n Do you want to install EFI GRUB2?" 7 39
 	if [ $? -eq 0 ]; then
 		get_part_info $1
