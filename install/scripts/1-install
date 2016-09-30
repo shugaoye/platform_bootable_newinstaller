@@ -284,7 +284,7 @@ install_to()
 	fs=`cat /proc/mounts | grep /dev/$1 | awk '{ print $3 }'`
 	cmdline=`sed "s|\(initrd.*img\s*\)||; s|quiet\s*||; s|\(vga=\w\+\?\s*\)||; s|\(DPI=\w\+\?\s*\)||; s|\(INSTALL=\w\+\?\s*\)||; s|\(SRC=\S\+\?\s*\)||; s|\(DEBUG=\w\+\?\s*\)||; s|\(BOOT_IMAGE=\S\+\?\s*\)||; s|\(iso-scan/filename=\S\+\?\s*\)||;" /proc/cmdline`
 
-	asrc=android-$VER
+	[ -n "$INSTALL_PREFIX" ] && asrc=$INSTALL_PREFIX || asrc=android-$VER
 	efi="`dmesg | grep EFI.VGA`"
 	[ -z "$efi" ] && dialog --title " Confirm " --no-label Skip --defaultno --yesno \
 		"\n Do you want to install boot loader GRUB?" 7 47
