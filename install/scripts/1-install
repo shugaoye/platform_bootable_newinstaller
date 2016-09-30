@@ -332,7 +332,7 @@ install_to()
 		try_mount rw /dev/$1 /hd
 	fi
 
-	dialog --title " Question " --yesno \
+	dialog --title " Question " --defaultno --yesno \
 		"\nDo you want to install /system directory as read-write?\n\nMaking /system be read-write is easier for debugging, but it needs more disk space and longer installation time." 10 61
 	instal_rw=$?
 
