@@ -24,7 +24,7 @@ edit_mbr := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
 include $(BUILD_HOST_EXECUTABLE)
 
 # VER ?= $(shell date +"%F")
-VER ?= x86vbox
+VER ?= x86emu
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)

@@ -130,7 +130,6 @@ debug_shell()
 
 echo -n Detecting Android-x86...
 
-    
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
 
 for c in `cat /proc/cmdline`; do
@@ -144,13 +143,6 @@ for c in `cat /proc/cmdline`; do
 done
 
 mount -t tmpfs tmpfs /android
-
-# Fix the mount point issue temporarily
-# echo "Creating mount points ..."
-# /bin/busybox ls /android
-# /bin/busybox mkdir -p /android/dev /android/proc /android/sys /android/system /android/data /android/oem
-# Remove the above later
-
 cd /android
 while :; do
 	for device in ${ROOT:-/dev/[hmsv][dmr][0-9a-z]*}; do
