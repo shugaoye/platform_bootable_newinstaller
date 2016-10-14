@@ -89,15 +89,12 @@ check_root()
 	fi
 	zcat /mnt/$SRC/ramdisk.img | cpio -id > /dev/null
 	if [ -e /mnt/$SRC/system.sfs ]; then
-	    echo "Found system.sfs"
 		mount -o loop /mnt/$SRC/system.sfs /sfs
 		mount -o loop /sfs/system.img system
 	elif [ -e /mnt/$SRC/system.img ]; then
-	    echo "Found system.img"
 		remount_rw
 		mount -o loop /mnt/$SRC/system.img system
 	elif [ -d /mnt/$SRC/system ]; then
-	    echo "Found /mnt/$SRC/system"
 		remount_rw
 		mount --bind /mnt/$SRC/system system
 	else
@@ -164,7 +161,7 @@ fi
 if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
 	mv /bin /lib .
 	sed -i 's|\( PATH.*\)|\1:/bin|' init.environ.rc
-#	rm /sbin/modprobe
+	rm /sbin/modprobe
 	busybox mv /sbin/* sbin
 	rmdir /sbin
 	ln -s android/bin android/lib android/sbin /
