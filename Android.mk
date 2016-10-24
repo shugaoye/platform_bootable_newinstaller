@@ -23,7 +23,7 @@ LOCAL_STATIC_LIBRARIES := libdiskconfig_host libcutils liblog
 edit_mbr := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
 include $(BUILD_HOST_EXECUTABLE)
 
-VER ?= $(shell date +"%F")
+VER ?= x86emu_ch07
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)
@@ -99,5 +99,7 @@ $(EFI_IMAGE): $(wildcard $(LOCAL_PATH)/boot/boot/*/*) $(BUILT_IMG) $(ESP_LAYOUT)
 iso_img: $(ISO_IMAGE)
 usb_img: $(ISO_IMAGE)
 efi_img: $(EFI_IMAGE)
+qcow2_img: $(BUILT_IMG)
+	qemu-img convert -c -f raw -O qcow2 $(PRODUCT_OUT)/system.img $(PRODUCT_OUT)/system-qcow2.img
 
 endif
