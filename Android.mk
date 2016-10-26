@@ -78,6 +78,14 @@ $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	$(hide) isohybrid --uefi $@ || echo -e "isohybrid not found.\nInstall syslinux 4.0 or higher if you want to build a usb bootable iso."
 	@echo -e "\n\n$@ is built successfully.\n\n"
 
+rpm: $(LOCAL_PATH)/rpm/rpm.spec $(BUILT_IMG)
+	@echo ----- Making an rpm ------
+	OUT=$(abspath $(PRODUCT_OUT)); mkdir -p $$OUT/rpm/BUILD; rm -rf mv $$OUT/rpm/RPMS/*; \
+	rpmbuild -bb --target=$(if $(filter x86,$(TARGET_ARCH)),i686,x86_64) -D"cmdline $(BOARD_KERNEL_CMDLINE)" \
+		-D"_topdir $$OUT/rpm" -D"_sourcedir $$OUT" -D"systemimg $(notdir $(systemimg))" -D"ver $(VER)" \
+		-D"install_prefix $(if $(INSTALL_PREFIX),$(INSTALL_PREFIX),android-$(VER))" $<; \
+	mv $$OUT/rpm/RPMS/*/*.rpm $$OUT
+
 # Note: requires dosfstools
 EFI_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).img
 ESP_LAYOUT := $(LOCAL_PATH)/editdisklbl/esp_layout.conf
@@ -95,7 +103,7 @@ $(EFI_IMAGE): $(wildcard $(LOCAL_PATH)/boot/boot/*/*) $(BUILT_IMG) $(ESP_LAYOUT)
 	$(hide) cat /dev/null > $@; $(edit_mbr) -l $(ESP_LAYOUT) -i $@ esp=$@.fat
 	$(hide) rm -f $@.fat
 
-.PHONY: iso_img usb_img efi_img
+.PHONY: iso_img usb_img efi_img rpm
 iso_img: $(ISO_IMAGE)
 usb_img: $(ISO_IMAGE)
 efi_img: $(EFI_IMAGE)
