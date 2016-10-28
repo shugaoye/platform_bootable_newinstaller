@@ -257,7 +257,7 @@ install_to()
 	mountpoint -q /hd && umount /hd
 	while [ 1 ]; do
 		format_fs $1
-		try_mount rw /dev/$1 /hd && break
+		mount /dev/$1 /hd && break
 		dialog --clear --title " Error " --defaultno --yesno \
 			"\n Cannot mount /dev/$1\n Do you want to format it?" 8 37
 		[ $? -ne 0 ] && return 255
