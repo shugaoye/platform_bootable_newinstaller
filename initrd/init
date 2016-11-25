@@ -84,10 +84,10 @@ check_root()
 		mkdir /mnt/iso
 		mount -o loop /iso/$iso /mnt/iso
 		SRC=iso
-	elif [ ! -e /mnt/$SRC/ramdisk.img ]; then
+	elif [ ! -e /mnt/$SRC/$RAMDISK ]; then
 		return 1
 	fi
-	zcat /mnt/$SRC/ramdisk.img | cpio -id > /dev/null
+	zcat /mnt/$SRC/$RAMDISK | cpio -id > /dev/null
 	if [ -e /mnt/$SRC/system.sfs ]; then
 		mount -o loop,noatime /mnt/$SRC/system.sfs /sfs
 		mount -o loop,noatime /sfs/system.img system
@@ -128,6 +128,7 @@ debug_shell()
 echo -n Detecting Android-x86...
 
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
+[ -z "$RAMDISK" ] && RAMDISK=ramdisk.img
 
 for c in `cat /proc/cmdline`; do
 	case $c in
