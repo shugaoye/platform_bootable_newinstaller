@@ -68,6 +68,16 @@ try_mount()
 	mount -o $RW $@ || mount.ntfs-3g -o rw,force $@
 }
 
+find_ramdisk()
+{
+	echo In find_ramdisk... 5
+	if [ $RECOVERY -eq 1 ]; then
+		RAMDISK=/mnt/$SRC/ramdisk-recovery.img
+	else
+		RAMDISK=/mnt/$SRC/ramdisk.img
+	fi
+}
+
 check_root()
 {
 	if [ "`dirname $1`" = "/dev" ]; then
@@ -79,15 +89,16 @@ check_root()
 		dev=$1
 	fi
 	try_mount ro $dev /mnt || return 1
+	find_ramdisk
 	if [ -n "$iso" -a -e /mnt/$iso ]; then
 		mount --move /mnt /iso
 		mkdir /mnt/iso
 		mount -o loop /iso/$iso /mnt/iso
 		SRC=iso
-	elif [ ! -e /mnt/$SRC/ramdisk.img ]; then
+	elif [ ! -e $RAMDISK ]; then
 		return 1
 	fi
-	zcat /mnt/$SRC/ramdisk.img | cpio -id > /dev/null
+	zcat $RAMDISK | cpio -id > /dev/null
 	if [ -e /mnt/$SRC/system.sfs ]; then
 	    echo "Found system.sfs"
 		mount -o loop /mnt/$SRC/system.sfs /sfs
