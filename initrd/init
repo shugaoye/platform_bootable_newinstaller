@@ -70,12 +70,12 @@ try_mount()
 
 find_ramdisk()
 {
-	echo In find_ramdisk... 5
 	if [ $RECOVERY -eq 1 ]; then
 		RAMDISK=/mnt/$SRC/ramdisk-recovery.img
 	else
 		RAMDISK=/mnt/$SRC/ramdisk.img
 	fi
+	echo boot using $RAMDISK ...
 }
 
 check_root()

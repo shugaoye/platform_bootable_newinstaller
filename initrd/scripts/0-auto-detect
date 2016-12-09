@@ -36,12 +36,14 @@ load_modules()
 		echo "Loading VBOX_GUEST_ADDITIONS ..."
 		insmod /android/system/vendor/vbox/vboxguest.ko
 		insmod /android/system/vendor/vbox/vboxsf.ko
-		modprobe ttm
-		modprobe drm_kms_helper
-		insmod /android/system/vendor/vbox/vboxvideo.ko
-		if [ ! -e /android$SDCARD ]; then
-			mkdir /android$SDCARD
-			/android/system/bin/mount.vboxsf sdcard /android$SDCARD
+		if [ ! -e /android/$SDCARD ]; then
+			mkdir /android/$SDCARD
+			/android/system/bin/mount.vboxsf sdcard /android/$SDCARD
+		fi
+		if [ -n "$VBOX_VIDEO_DRIVER" ]; then
+			modprobe ttm
+			modprobe drm_kms_helper
+			insmod /android/system/vendor/vbox/vboxvideo.ko
 		fi
 	fi
 }
