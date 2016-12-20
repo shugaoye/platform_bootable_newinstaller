@@ -70,10 +70,21 @@ try_mount()
 
 find_ramdisk()
 {
-	if [ $RECOVERY -eq 1 ]; then
-		RAMDISK=/mnt/$SRC/ramdisk-recovery.img
+	busybox mount /dev/sda5 /hd
+	if [ ! -e /hd/recovery/command ]; then
+		busybox umount /hd
+		if [ $RECOVERY -eq 1 ]; then
+			echo "Boot to recovery ..."
+			RAMDISK=/mnt/$SRC/ramdisk-recovery.img
+		else
+			echo "Boot to Android ..."
+			RAMDISK=/mnt/$SRC/ramdisk.img
+		fi
 	else
-		RAMDISK=/mnt/$SRC/ramdisk.img
+		echo "Boot to recovery ..."
+		busybox umount /hd
+		RAMDISK=/mnt/$SRC/ramdisk-recovery.img
+		return
 	fi
 	echo boot using $RAMDISK ...
 }
