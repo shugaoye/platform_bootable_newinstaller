@@ -74,14 +74,11 @@ find_ramdisk()
 	if [ ! -e /hd/recovery/command ]; then
 		busybox umount /hd
 		if [ $RECOVERY -eq 1 ]; then
-			echo "Boot to recovery ..."
 			RAMDISK=/mnt/$SRC/ramdisk-recovery.img
 		else
-			echo "Boot to Android ..."
 			RAMDISK=/mnt/$SRC/ramdisk.img
 		fi
 	else
-		echo "Boot to recovery ..."
 		busybox umount /hd
 		RAMDISK=/mnt/$SRC/ramdisk-recovery.img
 		return
