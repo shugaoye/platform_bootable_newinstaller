@@ -6,9 +6,19 @@
 # Last updated 2015/10/23
 #
 # License: GNU Public License
-# We explicitely grant the right to use the scripts
+# We explicitly grant the right to use the scripts
 # with Android-x86 project.
 #
+# Copyright (c) 2017 Roger Ye.  All rights reserved.
+# Modified this script to support recovery on VirtualBox
+# Kernel parameters supported by this script:
+#     DEBUG    - get a debug console during the boot
+#     SRC      - the folder used as the root of android system
+#     ROOT     - the storage device which can find $SRC
+#     RECOVERY - if this is set, we will boot to recovery
+#     DATA     - the partition which can be used as user data
+#     SDCARD   - the partition which can be used as SDCARD or vendor
+#     VBOX_GUEST_ADDITIONS - Use VirtualBox display driver
 
 PATH=/sbin:/bin:/system/bin:/system/xbin; export PATH
 
@@ -81,6 +91,7 @@ find_ramdisk()
 	else
 		busybox umount /hd
 		RAMDISK=/mnt/$SRC/ramdisk-recovery.img
+		RECOVERY=1
 		return
 	fi
 	echo boot using $RAMDISK ...
@@ -164,12 +175,6 @@ done
 
 mount -t tmpfs tmpfs /android
 
-# Fix the mount point issue temporarily
-# echo "Creating mount points ..."
-# /bin/busybox ls /android
-# /bin/busybox mkdir -p /android/dev /android/proc /android/sys /android/system /android/data /android/oem
-# Remove the above later
-
 cd /android
 while :; do
 	for device in ${ROOT:-/dev/[hmsv][dmr][0-9a-z]*}; do
@@ -183,6 +188,10 @@ done
 ln -s mnt/$SRC /src
 ln -s android/system /
 ln -s ../system/lib/firmware ../system/lib/modules /lib
+
+if [ -n "/fstab.x86" ]; then
+	cp /fstab.x86 /fstab.x86vbox
+fi
 
 if [ -n "$INSTALL" ]; then
 	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
