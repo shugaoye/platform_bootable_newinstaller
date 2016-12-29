@@ -189,8 +189,8 @@ ln -s mnt/$SRC /src
 ln -s android/system /
 ln -s ../system/lib/firmware ../system/lib/modules /lib
 
-if [ -n "/fstab.x86" ]; then
-	cp /fstab.x86 /fstab.x86vbox
+if [ -n "/android/fstab.x86" ]; then
+	cp /android/fstab.x86 /android/fstab.x86vbox
 fi
 
 if [ -n "$INSTALL" ]; then
