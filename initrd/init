@@ -131,8 +131,12 @@ check_root()
 		remount_rw
 		mount --bind /mnt/$SRC/system system
 	else
-		rm -rf *
-		return 1
+		if [ -n "$X86VBOX" ]; then
+			mount --move /mnt /android/system
+		else
+			rm -rf *
+			return 1
+		fi
 	fi
 	mkdir mnt
 	echo " found at $1"
