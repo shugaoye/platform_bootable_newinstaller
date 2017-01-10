@@ -1,6 +1,6 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2014/04/09
+# Last updated 2017/01/10
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -10,10 +10,16 @@
 mount_data()
 {
 	mountpoint -q data && return
-	[ -n "$DATA" ] && blk=`basename $DATA` || blk=
-	if [ -b "/dev/$blk" ]; then
-		[ ! -e /dev/block/$blk ] && ln /dev/$blk /dev/block
-		mount -o noatime /dev/block/$blk data
+	if [ -n "$DATA" ]; then
+		blk=`basename $DATA`
+		if [ -b "/dev/$blk" ]; then
+			[ ! -e /dev/block/$blk ] && ln /dev/$blk /dev/block
+			mount -o noatime /dev/block/$blk data
+		else
+			remount_rw
+			mkdir -p /mnt/$SRC/$DATA
+			mount --bind /mnt/$SRC/$DATA data
+		fi
 	elif [ -d /mnt/$SRC/data ]; then
 		remount_rw
 		mount --bind /mnt/$SRC/data data
