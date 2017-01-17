@@ -202,7 +202,8 @@ if [ 0$DEBUG -gt 1 ]; then
 	debug_shell debug-late
 fi
 
-[ -n "$DEBUG" ] && SWITCH=${SWITCH:-chroot}
+# For Andriod emulator, we don't use this.
+# [ -n "$DEBUG" ] && SWITCH=${SWITCH:-chroot}
 
 # We must disable mdev before switching to Android
 # since it conflicts with Android's init
