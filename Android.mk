@@ -51,6 +51,7 @@ $(INITRD_RAMDISK): $(initrd_bin) $(systemimg) $(TARGET_INITRD_SCRIPTS) | $(ACP) 
 	mkdir -p $(addprefix $(TARGET_INSTALLER_OUT)/,android iso mnt proc sys tmp sfs hd)
 	echo "VER=$(VER)" > $(TARGET_INSTALLER_OUT)/scripts/00-ver
 	$(if $(INSTALL_PREFIX),echo "INSTALL_PREFIX=$(INSTALL_PREFIX)" >> $(TARGET_INSTALLER_OUT)/scripts/00-ver)
+	$(if $(PREV_VERS),echo "PREV_VERS=\"$(PREV_VERS)\"" >> $(TARGET_INSTALLER_OUT)/scripts/00-ver)
 	$(MKBOOTFS) $(TARGET_INSTALLER_OUT) | gzip -9 > $@
 
 INSTALL_RAMDISK := $(PRODUCT_OUT)/install.img
