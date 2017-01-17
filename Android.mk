@@ -84,6 +84,7 @@ rpm: $(LOCAL_PATH)/rpm/rpm.spec $(BUILT_IMG)
 	OUT=$(abspath $(PRODUCT_OUT)); mkdir -p $$OUT/rpm/BUILD; rm -rf mv $$OUT/rpm/RPMS/*; \
 	rpmbuild -bb --target=$(if $(filter x86,$(TARGET_ARCH)),i686,x86_64) -D"cmdline $(BOARD_KERNEL_CMDLINE)" \
 		-D"_topdir $$OUT/rpm" -D"_sourcedir $$OUT" -D"systemimg $(notdir $(systemimg))" -D"ver $(VER)" \
+		$(if $(BUILD_NAME_VARIANT),-D"name $(BUILD_NAME_VARIANT)") \
 		-D"install_prefix $(if $(INSTALL_PREFIX),$(INSTALL_PREFIX),android-$(VER))" $<; \
 	mv $$OUT/rpm/RPMS/*/*.rpm $$OUT
 
