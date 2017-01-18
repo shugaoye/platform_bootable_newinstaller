@@ -98,8 +98,8 @@ check_root()
 		remount_rw
 		mount --bind /mnt/$SRC/system system
 	else
-		rm -rf *
-		return 1
+		echo Moving mount point to /android/system
+		mount --move /mnt /android/system
 	fi
 	mkdir mnt
 	echo " found at $1"
@@ -125,7 +125,11 @@ debug_shell()
 	fi
 }
 
-echo -n Detecting Android-x86...
+echo -n Detecting x86emu...
+export DEBUG=2
+export SRC=x86emu_ch07
+
+echo -e "\nType 'exit' to continue booting...\n"
 
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
 

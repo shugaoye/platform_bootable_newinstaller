@@ -23,8 +23,7 @@ LOCAL_STATIC_LIBRARIES := libdiskconfig_host libcutils liblog
 edit_mbr := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
 include $(BUILD_HOST_EXECUTABLE)
 
-# VER ?= $(shell date +"%F")
-VER ?= x86emu
+VER ?= x86emu_ch07
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)
@@ -101,20 +100,6 @@ iso_img: $(ISO_IMAGE)
 usb_img: $(ISO_IMAGE)
 efi_img: $(EFI_IMAGE)
 initrd:  $(BUILT_IMG)
-
-X86EMU_EXTRA_SIZE := 100000000
-X86EMU_DISK_SIZE := $(shell echo ${BOARD_SYSTEMIMAGE_PARTITION_SIZE}+${X86EMU_EXTRA_SIZE} | bc)
-X86EMU_TMP := x86emu_tmp
-
 qcow2_img: $(BUILT_IMG)
-	mkdir -p $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}
-	cd $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}; mkdir data
-	mv $(PRODUCT_OUT)/initrd.img $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}
-	mv $(PRODUCT_OUT)/install.img $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}
-	mv $(PRODUCT_OUT)/ramdisk.img $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}
-	mv $(PRODUCT_OUT)/system.img $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}
-	make_ext4fs -T -1 -l $(X86EMU_DISK_SIZE) $(PRODUCT_OUT)/${TARGET_PRODUCT}.img $(PRODUCT_OUT)/${X86EMU_TMP} $(PRODUCT_OUT)/${X86EMU_TMP}
-	mv $(PRODUCT_OUT)/${X86EMU_TMP}/${TARGET_PRODUCT}/*.img $(PRODUCT_OUT)/
-	qemu-img convert -c -f raw -O qcow2 $(PRODUCT_OUT)/${TARGET_PRODUCT}.img $(PRODUCT_OUT)/${TARGET_PRODUCT}-qcow2.img
-	cd $(PRODUCT_OUT); qemu-img create -f qcow2 -b ./${TARGET_PRODUCT}-qcow2.img ./${TARGET_PRODUCT}.img
-endif
+	qemu-img convert -c -f raw -O qcow2 $(PRODUCT_OUT)/system.img $(PRODUCT_OUT)/system-qcow2.img
+
