@@ -9,6 +9,7 @@
 
 mount_data()
 {
+	echo "Mount DATA=$DATA ..."
 	mountpoint -q data && return
 	[ -n "$DATA" ] && blk=`basename $DATA` || blk=
 	if [ -b "/dev/$blk" ]; then
@@ -27,6 +28,7 @@ mount_data()
 
 mount_sdcard()
 {
+	echo "Mount SDCARD=$SDCARD ..."
 	mountpoint -q sdcard && return
 	if [ -n "$SDCARD" -a -e /mnt/$SRC$SDCARD ]; then
 		if [ ! -e /android$SDCARD ]; then
