@@ -317,7 +317,7 @@ install_to()
 		"\nDo you want to install /system directory as read-write?\n\nMaking /system be read-write is easier for debugging, but it needs more disk space and longer installation time." 10 61
 	instal_rw=$?
 
-	files="mnt/$SRC/kernel mnt/$SRC/initrd.img mnt/$SRC/ramdisk.img"
+	files="mnt/$SRC/kernel mnt/$SRC/initrd.img mnt/$SRC/ramdisk.img mnt/$SRC/ramdisk-recovery.img"
 	if [ $instal_rw -eq 0 ]; then
 		if [ "$fs" = "vfat" -o "$fs" = "fuseblk" ]; then
 			[ -e /sfs/system.img ] && sysimg="/sfs/system.img" || sysimg="mnt/$SRC/system.*"
