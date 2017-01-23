@@ -9,7 +9,8 @@
 
 mount_data()
 {
-	echo "Mount DATA=$DATA ..."
+	[ $RECOVERY -eq 1 ] && return
+	echo "Mount DATA=$DATA, RECOVERY=$RECOVERY..."
 	mountpoint -q data && return
 	[ -n "$DATA" ] && blk=`basename $DATA` || blk=
 	if [ -b "/dev/$blk" ]; then
@@ -28,6 +29,7 @@ mount_data()
 
 mount_sdcard()
 {
+	[ $RECOVERY -eq 1 ] && return
 	echo "Mount SDCARD=$SDCARD ..."
 	mountpoint -q sdcard && return
 	if [ -n "$SDCARD" -a -e /mnt/$SRC$SDCARD ]; then
