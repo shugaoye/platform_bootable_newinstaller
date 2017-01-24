@@ -180,6 +180,10 @@ while :; do
 	echo -n .
 done
 
+if [ -n "/android/fstab.x86" ]; then
+	cp /android/fstab.x86 /android/fstab.x86vbox
+fi
+
 ln -s mnt/$SRC /src
 ln -s android/system /
 ln -s ../system/lib/firmware ../system/lib/modules /lib
