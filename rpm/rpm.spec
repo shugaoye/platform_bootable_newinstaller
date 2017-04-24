@@ -6,6 +6,7 @@ Source1: kernel
 Source2: initrd.img
 Source3: ramdisk.img
 Source4: %{systemimg}
+Source5: qemu-android
 License: Apache Public License / GPLv2
 Group: Operating system/Android
 URL: http://www.android-x86.org
@@ -22,8 +23,10 @@ or later.
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{install_prefix}
+mkdir -p %{buildroot}/%{install_prefix} %{buildroot}%{_bindir}
 install -m644 %{S:1} %{S:2} %{S:3} %{S:4} %{buildroot}/%{install_prefix}
+install -m755 %{S:5} %{buildroot}%{_bindir}
+sed -i "s|ANDROID_ROOT|/%{install_prefix}|; s|CMDLINE|%{cmdline}|" %{buildroot}%{_bindir}/`basename %{S:5}`
 
 %post
 . /etc/os-release
@@ -69,3 +72,4 @@ rm -rf %{buildroot}
 
 %files
 /%{install_prefix}/*
+%{_bindir}/*
