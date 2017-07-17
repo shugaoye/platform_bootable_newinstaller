@@ -20,7 +20,7 @@ linkdir()
 	local d="$PWD"
 	cd "$odir" && cd "$1"
 	for f in * .*; do
-		if [ "$f" != "." -a "$f" != ".." -a -e "$f" ]; then
+		if [ "$f" != "." -a "$f" != ".." -a \( -e "$f" -o -L "$f" \) ]; then
 			if [ -d "$f" -a ! -L "$f" ]; then
 				linkdir "$f" "$d/$f"
 			else
@@ -32,6 +32,8 @@ linkdir()
 }
 
 [ -z "$src" ] && usage
+
+[ ! -d "$src" ] && echo "$src is not a directory" && exit 2
 
 echo "$src" | grep -q /$ || dst=$dst/$(basename "$src")
 
