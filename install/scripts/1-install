@@ -394,7 +394,7 @@ install_hd()
 	select_dev || rebooting
 	retval=1
 	case "$choice" in
-		[shvm][dm]*)
+		[hmnsv][dmv]*)
 			install_to $choice
 			retval=$?
 			;;
