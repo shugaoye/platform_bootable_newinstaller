@@ -1,6 +1,6 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2016/07/21
+# Last updated 2017/07/18
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -32,7 +32,7 @@ choose()
 partition_drive()
 {
 	echo -n > $menufile
-	for i in /sys/block/[shv]d[a-z] /sys/block/mmcblk?; do
+	for i in /sys/block/[shv]d[a-z] /sys/block/mmcblk? /sys/block/nvme*; do
 		if [ ! -d $i ]; then  # pathname expansion failed
 			continue
 		fi
@@ -265,7 +265,7 @@ get_part_info()
 	d=0
 	while [ 1 ]; do
 		h=`echo $d | awk '{ printf("%c", $1+97) }'`
-		for part in /sys/block/[shv]d$h/$1 /sys/block/mmcblk$d/$1; do
+		for part in /sys/block/[shv]d$h/$1 /sys/block/mmcblk$d/$1 /sys/block/nvme0n$d/$1; do
 			[ -d $part ] && break 2
 		done
 		d=$(($d+1))
