@@ -265,7 +265,7 @@ get_part_info()
 	d=0
 	while [ 1 ]; do
 		h=`echo $d | awk '{ printf("%c", $1+97) }'`
-		for part in /sys/block/[shv]d$h/$1 /sys/block/mmcblk$d/$1 /sys/block/nvme0n$d/$1; do
+		for part in /sys/block/[shv]d$h/$1 /sys/block/mmcblk$d/$1 /sys/block/nvme0n$(($d+1))/$1; do
 			[ -d $part ] && break 2
 		done
 		d=$(($d+1))
