@@ -315,13 +315,9 @@ install_to()
 		done
 		boot=`basename $b`
 		mountpoint -q /hd && umount /hd
-		dialog --title " Confirm " --defaultno --yesno \
-			"\n Do you want to format the boot partition\n /dev/$boot?" 8 45
-		[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
 		while [ 1 ]; do
 			try_mount rw /dev/$boot /hd && break
-			dialog --title " Confirm " --yesno \
-			"\n Cannot mount /dev/$boot\n Do you want to format it?" 8 37
+			dialog --title " Confirm " --defaultno --yesno "\n Cannot mount /dev/$boot.\n Do you want to format it?" 8 37
 			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
 		done
 		cp -af /grub2/efi /hd
