@@ -23,6 +23,15 @@ LOCAL_STATIC_LIBRARIES := libdiskconfig_host libcutils liblog
 edit_mbr := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
 include $(BUILD_HOST_EXECUTABLE)
 
+include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_SRC_FILES := rpm/qemu-android
+LOCAL_MODULE := $(notdir $(LOCAL_SRC_FILES))
+LOCAL_MODULE_TAGS := debug
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_POST_INSTALL_CMD := $(hide) sed -i "s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
+include $(BUILD_PREBUILT)
+
 VER ?= $$(date +"%F")
 
 # use squashfs for iso, unless explictly disabled

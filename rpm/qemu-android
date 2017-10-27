@@ -39,15 +39,23 @@ elif [ -e data.img ]; then
 	fi
 fi
 
-$QEMU -enable-kvm -vga std -sdl \
+run_qemu()
+{
+	$QEMU -enable-kvm \
 	-kernel kernel \
 	-append "CMDLINE console=ttyS0 RAMDISK=vdb $DATADEV" \
 	-initrd initrd.img \
 	-m 2048 -smp 2 -cpu host \
 	-soundhw ac97 \
-	-net nic,model=e1000 -net user \
 	-serial mon:stdio \
 	-boot menu=on \
 	-drive index=0,if=virtio,id=system,file=$SYSTEMIMG,format=raw,readonly \
 	-drive index=1,if=virtio,id=ramdisk,file=ramdisk.img,format=raw,readonly \
+	-netdev user,id=mynet,hostfwd=tcp::5555-:5555 -device virtio-net-pci,netdev=mynet \
 	$DATA $@
+}
+
+# Try to run QEMU in several VGA modes
+run_qemu -vga virtio -display sdl,gl=on $@ || \
+run_qemu -vga std -display sdl $@ || \
+run_qemu $@
