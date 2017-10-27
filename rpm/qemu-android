@@ -47,7 +47,6 @@ run_qemu()
 	-initrd initrd.img \
 	-m 2048 -smp 2 -cpu host \
 	-soundhw ac97 \
-	-net nic,model=e1000 -net user \
 	-serial mon:stdio \
 	-boot menu=on \
 	-drive index=0,if=virtio,id=system,file=$SYSTEMIMG,format=raw,readonly \
