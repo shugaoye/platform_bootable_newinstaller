@@ -16,13 +16,6 @@ ifneq ($(filter x86%,$(TARGET_ARCH)),)
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := edit_mbr
-LOCAL_SRC_FILES := editdisklbl/editdisklbl.c
-LOCAL_CFLAGS := -O2 -g -W -Wall -Werror# -D_LARGEFILE64_SOURCE
-LOCAL_STATIC_LIBRARIES := libdiskconfig_host libcutils liblog
-edit_mbr := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
-include $(BUILD_HOST_EXECUTABLE)
-
 include $(CLEAR_VARS)
 LOCAL_IS_HOST_MODULE := true
 LOCAL_SRC_FILES := rpm/qemu-android
@@ -97,26 +90,9 @@ rpm: $(wildcard $(LOCAL_PATH)/rpm/*) $(BUILT_IMG)
 		-D"install_prefix $(if $(INSTALL_PREFIX),$(INSTALL_PREFIX),android-$(VER))" $(filter %.spec,$^); \
 	mv $$OUT/rpm/RPMS/*/*.rpm $$OUT
 
-# Note: requires dosfstools
-EFI_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).img
-ESP_LAYOUT := $(LOCAL_PATH)/editdisklbl/esp_layout.conf
-$(EFI_IMAGE): $(wildcard $(LOCAL_PATH)/boot/boot/*/*) $(BUILT_IMG) $(ESP_LAYOUT) | $(edit_mbr)
-	$(hide) sed "s|VER|$(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $(<D)/grub.cfg > $(@D)/grub.cfg
-	$(hide) size=0; \
-	for s in `du -sk $^ | awk '{print $$1}'`; do \
-		size=$$(($$size+$$s)); \
-        done; \
-	size=$$(($$(($$(($$(($$(($$size + $$(($$size / 100)))) - 1)) / 32)) + 1)) * 32)); \
-	rm -f $@.fat; mkdosfs -n Android-x86 -C $@.fat $$size
-	$(hide) mcopy -Qsi $@.fat $(<D)/../../../install/grub2/efi $(BUILT_IMG) ::
-	$(hide) mmd -i $@.fat ::boot; mmd -i $@.fat ::boot/grub
-	$(hide) mcopy -Qoi $@.fat $(@D)/grub.cfg ::boot/grub
-	$(hide) cat /dev/null > $@; $(edit_mbr) -l $(ESP_LAYOUT) -i $@ esp=$@.fat
-	$(hide) rm -f $@.fat
-
 .PHONY: iso_img usb_img efi_img rpm
 iso_img: $(ISO_IMAGE)
 usb_img: $(ISO_IMAGE)
-efi_img: $(EFI_IMAGE)
+efi_img: $(ISO_IMAGE)
 
 endif
