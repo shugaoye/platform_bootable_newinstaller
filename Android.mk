@@ -51,22 +51,22 @@ initrd_bin := \
 systemimg  := $(PRODUCT_OUT)/system.$(if $(MKSQUASHFS),sfs,img)
 $(if $(MKSQUASHFS),$(systemimg): | $(MKSQUASHFS))
 
-INITRD_RAMDISK := $(PRODUCT_OUT)/initrd.img
+TARGET_INITRD_OUT := $(PRODUCT_OUT)/initrd
+INITRD_RAMDISK := $(TARGET_INITRD_OUT).img
 $(INITRD_RAMDISK): $(initrd_bin) $(systemimg) $(TARGET_INITRD_SCRIPTS) | $(ACP) $(MKBOOTFS)
-	rm -rf $(TARGET_INSTALLER_OUT)
-	$(ACP) -pr $(initrd_dir) $(TARGET_INSTALLER_OUT)
-	$(if $(TARGET_INITRD_SCRIPTS),$(ACP) -p $(TARGET_INITRD_SCRIPTS) $(TARGET_INSTALLER_OUT)/scripts)
-	ln -s /bin/ld-linux.so.2 $(TARGET_INSTALLER_OUT)/lib
-	mkdir -p $(addprefix $(TARGET_INSTALLER_OUT)/,android iso mnt proc sys tmp sfs hd)
-	echo "VER=$(VER)" > $(TARGET_INSTALLER_OUT)/scripts/00-ver
-	$(if $(INSTALL_PREFIX),echo "INSTALL_PREFIX=$(INSTALL_PREFIX)" >> $(TARGET_INSTALLER_OUT)/scripts/00-ver)
-	$(if $(PREV_VERS),echo "PREV_VERS=\"$(PREV_VERS)\"" >> $(TARGET_INSTALLER_OUT)/scripts/00-ver)
-	$(MKBOOTFS) $(TARGET_INSTALLER_OUT) | gzip -9 > $@
+	$(hide) rm -rf $(TARGET_INITRD_OUT)
+	mkdir -p $(addprefix $(TARGET_INITRD_OUT)/,android hd iso lib mnt proc scripts sfs sys tmp)
+	$(if $(TARGET_INITRD_SCRIPTS),$(ACP) -p $(TARGET_INITRD_SCRIPTS) $(TARGET_INITRD_OUT)/scripts)
+	ln -s /bin/ld-linux.so.2 $(TARGET_INITRD_OUT)/lib
+	echo "VER=$(VER)" > $(TARGET_INITRD_OUT)/scripts/00-ver
+	$(if $(INSTALL_PREFIX),echo "INSTALL_PREFIX=$(INSTALL_PREFIX)" >> $(TARGET_INITRD_OUT)/scripts/00-ver)
+	$(if $(PREV_VERS),echo "PREV_VERS=\"$(PREV_VERS)\"" >> $(TARGET_INITRD_OUT)/scripts/00-ver)
+	$(MKBOOTFS) $(<D) $(TARGET_INITRD_OUT) | gzip -9 > $@
 
 INSTALL_RAMDISK := $(PRODUCT_OUT)/install.img
 $(INSTALL_RAMDISK): $(wildcard $(LOCAL_PATH)/install/*/* $(LOCAL_PATH)/install/*/*/*/*) | $(MKBOOTFS)
-	$(if $(TARGET_INSTALL_SCRIPTS),$(ACP) -p $(TARGET_INSTALL_SCRIPTS) $(TARGET_INSTALLER_OUT)/scripts)
-	$(MKBOOTFS) $(dir $(dir $(<D))) | gzip -9 > $@
+	$(if $(TARGET_INSTALL_SCRIPTS),mkdir -p $(TARGET_INSTALLER_OUT)/scripts; $(ACP) -p $(TARGET_INSTALL_SCRIPTS) $(TARGET_INSTALLER_OUT)/scripts)
+	$(MKBOOTFS) $(dir $(dir $(<D))) $(TARGET_INSTALLER_OUT) | gzip -9 > $@
 
 boot_dir := $(PRODUCT_OUT)/boot
 $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(systemimg) $(INSTALL_RAMDISK) $(GENERIC_X86_CONFIG_MK) | $(ACP)
