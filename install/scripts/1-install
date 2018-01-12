@@ -314,19 +314,35 @@ install_to()
 			[ $(blkid /dev/`basename $i` | grep -c vfat) -ne 0 ] && b=$i && break
 		done
 		boot=`basename $b`
+		bootp=`cat $b/partition`
 		mountpoint -q /hd && umount /hd
 		while [ 1 ]; do
 			try_mount rw /dev/$boot /hd && break
 			dialog --title " Confirm " --defaultno --yesno "\n Cannot mount /dev/$boot.\n Do you want to format it?" 8 37
 			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
 		done
-		cp -af /grub2/efi /hd
-		mkdir -p /hd/boot/grub
+		mkdir -p hd/boot/grub hd/efi/Android
+		cp -af grub2/efi/boot/* hd/efi/Android
 		grubcfg=/hd/boot/grub/grub.cfg
 		echo -e "set timeout=5\n\n" > $grubcfg
 		echo -e "menuentry \"Android-x86 $VER\" {\n\tsearch --set=root --file /$asrc/kernel\n\tlinux /$asrc/kernel quiet $cmdline \n\tinitrd /$asrc/initrd.img\n}" >> $grubcfg
 		echo -e "menuentry \"Android-x86 $VER (DEBUG mode)\" {\n\tsearch --set=root --file /$asrc/kernel\n\tlinux /$asrc/kernel $cmdline DEBUG=2\n\tinitrd /$asrc/initrd.img\n}" >> $grubcfg
 		echo -e '\nset winefi=/EFI/Microsoft/Boot/bootmgfw.efi\nsearch --file --no-floppy --set=win ${winefi}\nif [ -e (${win})/${winefi} ]; then\n\tmenuentry 'Windows' --class windows {\n\t\tset root=${win}\n\t\tchainloader (${root})/${winefi}\n\t}\nfi\n' >> $grubcfg
+
+		# Checking for old EFI entries, removing them and adding new depending on bitness
+		mount -t efivarfs none /sys/firmware/efi/efivars
+		efibootmgr | grep -Eo ".{0,6}Android-x86" | cut -c1-4 > /tmp/efientries
+		if [ -s /tmp/efientries ]; then
+			dialog --title " Question " --defaultno --yesno "\nEFI boot entries for previous Android-x86 installations were found.\n\nDo you wish to delete them?" 10 61
+			[ $? -eq 0 ] && while read entry; do efibootmgr -Bb "$entry" > /dev/tty4 2>&1; done < /tmp/efientries
+		fi
+		if [ "$(cat /sys/firmware/efi/fw_platform_size)" == "32" ]; then
+			bootefi=bootia32.efi
+		else
+			bootefi=BOOTx64.EFI
+		fi
+		efibootmgr -v -c -d /dev/$disk -p $bootp -L "Android-x86 $VER" -l /efi/Android/$bootefi > /dev/tty4 2>&1
+
 		mountpoint -q /hd && umount /hd
 		try_mount rw /dev/$1 /hd
 	fi
