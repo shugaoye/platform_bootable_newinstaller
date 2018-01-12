@@ -324,9 +324,18 @@ install_to()
 		mkdir -p hd/boot/grub hd/efi/Android
 		cp -af grub2/efi/boot/* hd/efi/Android
 		grubcfg=/hd/boot/grub/grub.cfg
+
+		# Our grub-efi doesn't support ntfs directly.
+		# Copy boot files to ESP so grub-efi could read them
+		if [ "$fs" = "fuseblk" ]; then
+			cp -f src/kernel src/initrd.img hd/efi/Android
+			kdir=efi/Android
+		else
+			kdir=$asrc
+		fi
 		echo -e "set timeout=5\n\n" > $grubcfg
-		echo -e "menuentry \"Android-x86 $VER\" {\n\tsearch --set=root --file /$asrc/kernel\n\tlinux /$asrc/kernel quiet $cmdline \n\tinitrd /$asrc/initrd.img\n}" >> $grubcfg
-		echo -e "menuentry \"Android-x86 $VER (DEBUG mode)\" {\n\tsearch --set=root --file /$asrc/kernel\n\tlinux /$asrc/kernel $cmdline DEBUG=2\n\tinitrd /$asrc/initrd.img\n}" >> $grubcfg
+		echo -e "menuentry \"Android-x86 $VER\" {\n\tsearch --set=root --file /$kdir/kernel\n\tlinux /$kdir/kernel SRC=/$asrc quiet $cmdline\n\tinitrd /$kdir/initrd.img\n}" >> $grubcfg
+		echo -e "menuentry \"Android-x86 $VER (DEBUG mode)\" {\n\tsearch --set=root --file /$kdir/kernel\n\tlinux /$kdir/kernel SRC=/$asrc $cmdline DEBUG=2\n\tinitrd /$kdir/initrd.img\n}" >> $grubcfg
 		echo -e '\nset winefi=/EFI/Microsoft/Boot/bootmgfw.efi\nsearch --file --no-floppy --set=win ${winefi}\nif [ -e (${win})/${winefi} ]; then\n\tmenuentry 'Windows' --class windows {\n\t\tset root=${win}\n\t\tchainloader (${root})/${winefi}\n\t}\nfi\n' >> $grubcfg
 
 		# Checking for old EFI entries, removing them and adding new depending on bitness
