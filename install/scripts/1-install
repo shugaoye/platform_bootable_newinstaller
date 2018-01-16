@@ -1,6 +1,6 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2017/07/18
+# Last updated 2018/01/16
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -23,19 +23,22 @@ rebooting()
 choose()
 {
 	dialog --clear --title " $1 " \
-		--menu "$2" 20 71 13 --file $menufile 2> $tempfile
+		--menu "$2" 21 79 13 --file $menufile 2> $tempfile
 
 	retval=$?
 	choice=`cat $tempfile`
+}
+
+size_gb()
+{
+	printf %0.2fGB $(dc `cat $1/size` 2097152 / p)
 }
 
 partition_drive()
 {
 	echo -n > $menufile
 	for i in /sys/block/[shv]d[a-z] /sys/block/mmcblk? /sys/block/nvme*; do
-		if [ ! -d $i ]; then  # pathname expansion failed
-			continue
-		fi
+		[ -d $i ] || continue # pathname expansion failed
 		echo -n `basename $i` >> $menufile
 		if [ -f $i/removable -a `cat $i/removable` -eq 0 ]; then
 			echo -n ' "Harddisk ' >> $menufile
@@ -43,8 +46,14 @@ partition_drive()
 			echo -n ' "Removable' >> $menufile
 		fi
 		if [ -f $i/size ]; then
-			echo -n " (" `cat $i/size` "blocks)" >> $menufile
+			sz=$(size_gb $i)
+			[ "$sz" = "0.00GB" ] && sz="<0.01GB"
+			printf " %10s" $sz >> $menufile
 		fi
+		for f in $i/device/model $i/*/name; do
+			[ -e $f ] && echo -n " `sed $'s/\x04//g' $f`" >> $menufile && break
+		done
+		[ "`basename $i`" = "$booted_from" -o -d $i/$booted_from ] && echo -n " *" >> $menufile
 		echo '"' >> $menufile
 	done
 	count=`wc -l $menufile | awk '{ print $1 }'`
@@ -57,7 +66,7 @@ partition_drive()
 		choice=`awk '{ print $1 }' $menufile`
 		retval=0
 	else
-		choose "Choose Drive" "Please select a drive to edit partitions:"
+		choose "Choose Drive" "Please select a drive to edit partitions:\n\n* - Installer source"
 	fi
 	if [ $retval -eq 0 ]; then
 		dialog --title " Confirm " --defaultno --yesno "\n Do you want to use GPT?" 7 29
@@ -78,31 +87,38 @@ partition_drive()
 select_dev()
 {
 	blkid | grep -v -E "^/dev/block/|^/dev/loop" | cut -b6- | sort | awk '{
+		l=""
 		t="unknown"
+		sub(/:/, "", $1)
 		for (i = NF; i > 1; --i)
 			if (match($i, "^TYPE")) {
 				t=$i
-				break
+				gsub(/TYPE=|"/, "", t)
+			} else if (match($i, "^LABEL")) {
+				l=$i
+				gsub(/LABEL=|"/, "", l)
 			}
-		gsub(/TYPE=|"/, "", t)
-		printf("%s\t%s\n", $1, t)
+		printf("%-11s%-12s%-18s\n", $1, t, l)
 	}' > $tempfile
 
-	lsblk=`ls /sys/block | grep -v -E "loop|ram|sr|boot|rpmb"`
-	for d in $lsblk; do
+	for d in `ls /sys/block`; do
 		for i in /sys/block/$d/$d*; do
-			echo $i | grep -q -E "boot|rpmb" && continue
-			[ -d $i ] && ( grep "`basename $i:`" $tempfile || echo "`basename $i` unknown" )
+			[ -d $i ] || continue
+			echo $i | grep -qE "loop|ram|sr|boot|rpmb" && continue
+			f=$(grep "`basename $i`" $tempfile || printf "%-11s%-29s" `basename $i` unknown)
+			sz=$(size_gb $i)
+			[ "$sz" = "0.00GB" ] || printf "$f%10s\n" $sz
 		done
-	done | awk '{
-		sub(/:/, "", $1)
-		printf("\"%-13s%-17s", $1, $2)
-		system("cd /sys/block; for f in "$1"/device/model "$1"/device/name */"$1"/../device/model */"$1"/../device/name; do [ -e $f ] && echo -n `cat $f` && break; done")
-		printf("\" \"\"\n")
+	done | awk -v b=$booted_from '{
+		if (!match($1, b)) {
+			printf("\"%s\" \"", $0)
+			system("cd /sys/block/*/"$1"; for f in ../device/model ../device/name; do [ -e $f ] && printf %-17s \"`cat $f`\" && break; done")
+			printf("\"\n")
+		}
 	} END {
-		printf("\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
+		printf("\"\" \"\"\n\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
 	}' > $menufile
-	choose "Choose Partition" "Please select a partition to install Android-x86:"
+	choose "Choose Partition" "Please select a partition to install Android-x86:\n\nRecommended minimum free space - 4GB  |  Optimum free space >= 8GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
 	return $retval
 }
 
@@ -143,7 +159,7 @@ format_fs()
 	esac
 	if [ -n "$cmd" ]; then
 		dialog --title " Confirm " --defaultno --yesno \
-			"\n You chose to format $1 to $choice.\n All data in that partition will LOSE.\n\n Are you sure to format the partition $1?" 10 51
+			"\n You chose to format $1 to $choice.\n All data in that partition will be LOST.\n\n Are you sure to format the partition $1?" 10 51
 		[ $? -ne 0 ] && return 1
 		$cmd Android-x86 /dev/$1 | awk '{
 			# FIXME: very imprecise progress
@@ -276,6 +292,7 @@ get_part_info()
 
 install_to()
 {
+	[ -b /dev/$1 ] || return 1
 	cd /
 	mountpoint -q /hd && umount /hd
 	while [ 1 ]; do
@@ -413,10 +430,6 @@ install_hd()
 	select_dev || rebooting
 	retval=1
 	case "$choice" in
-		[hmnsv][dmv]*)
-			install_to $choice
-			retval=$?
-			;;
 		Create*)
 			partition_drive
 			retval=$?
@@ -424,12 +437,17 @@ install_hd()
 		Detect*)
 			dialog --title " Detecting... " --nocancel --pause "" 8 41 1
 			;;
+		*)
+			install_to $choice
+			retval=$?
+			;;
 	esac
 	return $retval
 }
 
 do_install()
 {
+	booted_from=`basename $dev`
 	until install_hd; do
 		if [ $retval -eq 255 ]; then
 			dialog --title ' Error! ' --yes-label Retry --no-label Reboot \
