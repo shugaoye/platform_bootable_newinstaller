@@ -348,6 +348,7 @@ install_to()
 		mkdir -p `dirname $grubcfg` efi/efi/Android
 		cp -af grub2/efi/boot/* efi/efi/Android
 		sed -i "s|VER|$VER|; s|CMDLINE|$cmdline|" efi/efi/Android/android.cfg
+		[ -s efi/boot/grub/grubenv ] || ( printf %-1024s "# GRUB Environment Block%" | sed 's/k%/k\n/; s/   /###/g' > efi/boot/grub/grubenv )
 
 		echo -e 'set timeout=5\nset debug_mode="(DEBUG mode)"' > $grubcfg
 		# Our grub-efi doesn't support ntfs directly.
