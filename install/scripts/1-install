@@ -292,7 +292,12 @@ get_part_info()
 
 install_to()
 {
-	[ -b /dev/$1 ] || return 1
+	local t=`echo /sys/block/*/$1/partition`
+	[ -f "$t" ] || return 1
+	until [ -b /dev/$1 ]; do
+		echo add > `dirname $t`/uevent
+		sleep 1
+	done
 	cd /
 	mountpoint -q /hd && umount /hd
 	while [ 1 ]; do
