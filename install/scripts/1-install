@@ -34,11 +34,22 @@ size_gb()
 	printf %0.2fGB $(dc `cat $1/size` 2097152 / p)
 }
 
+find_partition()
+{
+	grep -H ^$2$ /sys/block/$1/*/partition 2> /dev/null | cut -d/ -f5
+}
+
+list_disks()
+{
+	for b in /sys/block/[shv]d[a-z] /sys/block/mmcblk? /sys/block/nvme*; do
+		[ -d $b ] && echo $b
+	done
+}
+
 partition_drive()
 {
 	echo -n > $menufile
-	for i in /sys/block/[shv]d[a-z] /sys/block/mmcblk? /sys/block/nvme*; do
-		[ -d $i ] || continue # pathname expansion failed
+	for i in `list_disks`; do
 		echo -n `basename $i` >> $menufile
 		if [ -f $i/removable -a `cat $i/removable` -eq 0 ]; then
 			echo -n ' "Harddisk ' >> $menufile
@@ -329,13 +340,17 @@ install_to()
 	[ -n "$efi" ] && dialog --title " Confirm " --no-label Skip --defaultno --yesno \
 		"\n Do you want to install EFI GRUB2?" 7 39
 	if [ $? -eq 0 ]; then
-		get_part_info $1
-		for i in /sys/block/$disk/$disk*; do
-			[ 0`cat $i/partition` -eq 1 ] && b=$i
-			[ $(blkid /dev/`basename $i` | grep -c vfat) -ne 0 ] && b=$i && break
+		for i in `list_disks`; do
+			disk=`basename $i`
+			esp=`sgdisk --print /dev/$disk 2> /dev/null | grep EF00 | awk '{print $1}'`
+			[ -n "$esp" ] && boot=`find_partition $disk $esp` && break
 		done
-		boot=`basename $b`
-		bootp=`cat $b/partition`
+		if [ -z "$esp" ]; then
+			get_part_info $1
+			boot=`basename $(blkid /dev/$disk* | grep vfat | cut -d: -f1 | head -1)`
+			[ -z "$boot" ] && boot=`find_partition $disk 1`
+			esp=`cat /sys/block/$disk/$boot/partition`
+		fi
 		mkdir -p efi
 		mountpoint -q efi && umount efi
 		while [ 1 ]; do
@@ -372,7 +387,7 @@ install_to()
 			dialog --title " Question " --defaultno --yesno "\nEFI boot entries for previous Android-x86 installations were found.\n\nDo you wish to delete them?" 10 61
 			[ $? -eq 0 ] && while read entry; do efibootmgr -Bb "$entry" > /dev/tty4 2>&1; done < /tmp/efientries
 		fi
-		efibootmgr -v -c -d /dev/$disk -p $bootp -L "Android-x86 $VER" -l /efi/Android/$bootefi > /dev/tty4 2>&1
+		efibootmgr -v -c -d /dev/$disk -p $esp -L "Android-x86 $VER" -l /efi/Android/$bootefi > /dev/tty4 2>&1
 	fi
 
 	dialog --title " Question " --defaultno --yesno \
