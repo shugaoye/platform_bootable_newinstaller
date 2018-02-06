@@ -2,6 +2,7 @@ Summary: %{?title}%{!?title:Android-x86} - Run Android on your PC
 Name: %{?name}%{!?name:android-x86}
 Version: %(echo %{ver} | cut -d- -f1)
 Release: %(echo %{ver} | cut -d- -f2)
+Epoch: %{epoch}
 Source1: kernel
 Source2: initrd.img
 Source3: ramdisk.img
