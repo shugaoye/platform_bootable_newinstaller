@@ -76,7 +76,7 @@ auto_partition()
 		echo -e "o\nn\np\n1\n\n\nw\n" | fdisk /dev/$1
 		p=1
 	else
-		sgdisk --zap-all /dev/$1 > /dev/tty6
+		sgdisk --zap-all /dev/$1
 		sgdisk --new=1::+260M --typecode=1:EF00 --largest-new=2 --typecode=2:8300 /dev/$1
 		p=2
 	fi > /dev/tty6
