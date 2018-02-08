@@ -1,6 +1,6 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2018/02/07
+# Last updated 2018/02/08
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -85,6 +85,7 @@ auto_partition()
 		answer=`find_partition $1 $p`
 		[ -n "$answer" ] && break
 	done
+	[ -n "$efi" ] && mkdosfs -n EFI /dev/`find_partition $1 1`
 }
 
 partition_drive()
@@ -396,22 +397,20 @@ install_to()
 	[ -n "$efi" ] && adialog --title " Confirm " --no-label Skip --yesno \
 		"\n Do you want to install EFI GRUB2?" 7 39
 	if [ $? -eq 0 ]; then
-		for i in `list_disks`; do
+		[ -z "$AUTO_INSTALL" -o -n "$AUTO_UPDATE" ] && for i in `list_disks`; do
 			disk=`basename $i`
 			esp=`sgdisk --print /dev/$disk 2> /dev/null | grep EF00 | awk '{print $1}'`
 			[ -n "$esp" ] && boot=`find_partition $disk $esp` && break
 		done
 		if [ -z "$esp" ]; then
 			get_part_info $1
-			boot=`basename $(blkid /dev/$disk* | grep vfat | cut -d: -f1 | head -1)`
-			[ -z "$boot" ] && boot=`find_partition $disk 1`
+			boot=$(blkid /dev/$disk* | grep vfat | cut -d: -f1 | head -1)
+			[ -z "$boot" ] && boot=`find_partition $disk 1` || boot=`basename $boot`
 			esp=`cat /sys/block/$disk/$boot/partition`
 		fi
 		mkdir -p efi
 		mountpoint -q efi && umount efi
-		while [ 1 ]; do
-			[ -n "$AUTO_INSTALL" -a -z "$AUTO_UPDATE" ] && mkdosfs -n EFI /dev/$boot
-			try_mount rw /dev/$boot efi && break
+		until try_mount rw /dev/$boot efi; do
 			dialog --title " Confirm " --defaultno --yesno "\n Cannot mount /dev/$boot.\n Do you want to format it?" 8 37
 			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
 		done
