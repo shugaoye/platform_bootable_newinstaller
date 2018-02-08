@@ -383,8 +383,19 @@ install_to()
 	[ -z "$efi" ] && adialog --title " Confirm " --no-label Skip --defaultno --yesno \
 		"\n Do you want to install boot loader GRUB?" 7 47
 	if [ $? -eq 0 ]; then
-		cp -af /grub /hd
 		get_part_info $1
+		if fdisk -l /dev/$disk | grep -q GPT; then
+			umount /hd
+			dialog --title " Warning " --defaultno --yesno \
+				"\nFound GPT on /dev/$disk. The legacy GRUB can't be installed to GPT. Do you want to convert it to MBR?\n\nWARNING: This is a dangerous operation. You should backup your data first." 11 63
+			[ $? -eq 1 ] && rebooting
+			plist=$(sgdisk --print /dev/$disk | awk '/^  / { printf "%s:", $1 }' | sed 's/:$//')
+			sgdisk --gpttombr=$plist /dev/$disk > /dev/tty6
+			until try_mount rw /dev/$1 /hd; do
+				sleep 1
+			done
+		fi
+		cp -af /grub /hd
 		p=$(($p-1))
 		create_menulst $p
 		create_winitem $1 $d
@@ -508,6 +519,7 @@ install_to()
 
 	dialog --infobox "\n Syncing to disk..." 5 27
 	sync
+	cd /
 
 	return $result
 }
