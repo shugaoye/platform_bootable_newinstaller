@@ -528,9 +528,10 @@ install_hd()
 {
 	case "$AUTO_INSTALL" in
 		[Uu]*)
-			answer=`basename $(blkid | grep -v loop | grep -v iso9660 | sort | grep Android-x86 | cut -d: -f1 | head -1)`
-			[ -z "$answer" ] && answer=`basename $(blkid | grep -v loop | sort | grep ext4 | cut -d: -f1 | head -1)`
-			AUTO_UPDATE=$answer
+			answer=${AUTO_UPDATE:-$(blkid | grep -v loop | grep -v iso9660 | sort | grep Android-x86 | cut -d: -f1 | head -1)}
+			answer=${answer:-$(blkid | grep -v loop | sort | grep ext4 | cut -d: -f1 | head -1)}
+			[ -b "$answer" -o -b /dev/$answer ] && answer=`basename $answer` || answer=
+			AUTO_UPDATE=${answer:-$AUTO_UPDATE}
 			;;
 		*)
 			[ -z "$answer" ] && set_answer_if_auto Create
