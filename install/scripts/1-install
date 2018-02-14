@@ -1,6 +1,5 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2018/02/08
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -11,6 +10,7 @@ tempfile=/tmp/temp-$$
 menufile=/tmp/menu-$$
 
 CPIO=cpio
+OS_TITLE=${OS_TITLE:-Android-x86}
 
 rebooting()
 {
@@ -69,7 +69,7 @@ list_disks()
 auto_partition()
 {
 	[ "$AUTO_INSTALL" = "force" ] || dialog --title " Auto Installer " --defaultno --yesno \
-		"\nYou have chosen the AUTO installation.\n\nThe installer will erase the whole /dev/$1 and install Android-x86 to it.\n\nThis is the last confirmation. Are you sure to do so?" 12 61
+		"\nYou have chosen the AUTO installation.\n\nThe installer will erase the whole /dev/$1 and install $OS_TITLE to it.\n\nThis is the last confirmation. Are you sure to do so?" 12 61
 	[ $? -ne 0 ] && rebooting
 
 	if [ -z "$efi" ]; then
@@ -181,7 +181,7 @@ select_dev()
 	} END {
 		printf("\"\" \"\"\n\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
 	}' > $menufile
-	choose "Choose Partition" "Please select a partition to install Android-x86:\n\nRecommended minimum free space - 4GB  |  Optimum free space >= 8GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
+	choose "Choose Partition" "Please select a partition to install $OS_TITLE:\n\nRecommended minimum free space - 4GB  |  Optimum free space >= 8GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
 	return $retval
 }
 
@@ -250,10 +250,10 @@ create_menulst()
 	[ -n "$VESA" ] && vga=" vga=788 modeset=0"
 	echo -e "${GRUB_OPTIONS:-default=0\ntimeout=6\nsplashimage=/grub/android-x86.xpm.gz\n}root (hd0,$1)\n" > $menulst
 
-	create_entry "Android-x86 $VER" quiet $cmdline
-	create_entry "Android-x86 $VER (Debug mode)" $cmdline DEBUG=2
-	create_entry "Android-x86 $VER (Debug nomodeset)" nomodeset $cmdline DEBUG=2
-	create_entry "Android-x86 $VER (Debug video=LVDS-1:d)" video=LVDS-1:d $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER" quiet $cmdline
+	create_entry "$OS_TITLE $VER (Debug mode)" $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER (Debug nomodeset)" nomodeset $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER (Debug video=LVDS-1:d)" video=LVDS-1:d $cmdline DEBUG=2
 }
 
 create_winitem()
@@ -440,7 +440,7 @@ install_to()
 		fi
 		mkdir -p `dirname $grubcfg` efi$efidir
 		cp -af grub2/efi/boot/* efi$efidir
-		sed -i "s|VER|$VER|; s|CMDLINE|$cmdline|" efi$efidir/android.cfg
+		sed -i "s|VER|$VER|; s|CMDLINE|$cmdline|; s|OS_TITLE|$OS_TITLE|" efi$efidir/android.cfg
 		[ -s efi/boot/grub/grubenv ] || ( printf %-1024s "# GRUB Environment Block%" | sed 's/k%/k\n/; s/   /###/g' > efi/boot/grub/grubenv )
 
 		echo -e 'set timeout=5\nset debug_mode="(DEBUG mode)"' > $grubcfg
@@ -495,7 +495,7 @@ install_to()
 	cd hd/$asrc
 	rm -rf system*
 	( ( cd /; find $files | $CPIO -H newc -o ) | pv -ns ${size}k | ( $CPIO -iud > /dev/null; echo $? > /tmp/result )) 2>&1 \
-		| progress_bar "Installing Android-x86 to $1" "Expect to write $size KB..."
+		| progress_bar "Installing $OS_TITLE to $1" "Expect to write $size KB..."
 	result=$((`cat /tmp/result`*255))
 
 	if [ $result -eq 0 ]; then
@@ -565,14 +565,14 @@ do_install()
 	until install_hd; do
 		if [ $retval -eq 255 ]; then
 			dialog --title ' Error! ' --yes-label Retry --no-label Reboot \
-				--yesno '\nInstallation failed! Please check if you have enough free disk space to install Android-x86.' 8 51
+				--yesno '\nInstallation failed! Please check if you have enough free disk space to install $OS_TITLE.' 8 51
 			[ $? -eq 1 ] && rebooting
 		fi
 	done
 
-	[ -n "$VESA" ] || runit="Run Android-x86"
+	[ -n "$VESA" ] || runit="Run $OS_TITLE"
 	dialog --clear --title ' Congratulations! ' \
-		--menu "\n Android-x86 is installed successfully.\n " 11 51 13 \
+		--menu "\n $OS_TITLE is installed successfully.\n " 11 51 13 \
 		"$runit" "" "Reboot" "" 2> $tempfile
 	case "`cat $tempfile`" in
 		Run*)
