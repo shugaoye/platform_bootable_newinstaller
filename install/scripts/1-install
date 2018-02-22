@@ -1,6 +1,5 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2017/07/18
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -11,6 +10,7 @@ tempfile=/tmp/temp-$$
 menufile=/tmp/menu-$$
 
 CPIO=cpio
+OS_TITLE=${OS_TITLE:-Android-x86}
 
 rebooting()
 {
@@ -20,22 +20,78 @@ rebooting()
 	reboot -f
 }
 
+auto_answer()
+{
+	echo "$answer" > $tempfile
+	unset answer
+	test "`cat $tempfile`" != "0"
+}
+
+set_answer_if_auto()
+{
+	[ -n "$AUTO_INSTALL" ] && answer="$1"
+}
+
+adialog()
+{
+	if [ -n "$answer" ]; then
+		auto_answer
+	else
+		dialog "$@" 2> $tempfile
+	fi
+}
+
 choose()
 {
-	dialog --clear --title " $1 " \
-		--menu "$2" 20 71 13 --file $menufile 2> $tempfile
+	adialog --clear --title " $1 " --menu "$2" 21 79 13 --file $menufile
 
 	retval=$?
 	choice=`cat $tempfile`
 }
 
+size_gb()
+{
+	printf %0.2fGB $(dc `cat $1/size` 2097152 / p)
+}
+
+find_partition()
+{
+	grep -H ^$2$ /sys/block/$1/*/partition 2> /dev/null | cut -d/ -f5
+}
+
+list_disks()
+{
+	for b in /sys/block/[shv]d[a-z] /sys/block/mmcblk? /sys/block/nvme*; do
+		[ -d $b ] && echo $b
+	done
+}
+
+auto_partition()
+{
+	[ "$AUTO_INSTALL" = "force" ] || dialog --title " Auto Installer " --defaultno --yesno \
+		"\nYou have chosen the AUTO installation.\n\nThe installer will erase the whole /dev/$1 and install $OS_TITLE to it.\n\nThis is the last confirmation. Are you sure to do so?" 12 61
+	[ $? -ne 0 ] && rebooting
+
+	if [ -z "$efi" ]; then
+		echo -e "o\nn\np\n1\n\n\nw\n" | fdisk /dev/$1
+		p=1
+	else
+		sgdisk --zap-all /dev/$1
+		sgdisk --new=1::+260M --typecode=1:EF00 --largest-new=2 --typecode=2:8300 /dev/$1
+		p=2
+	fi > /dev/tty6
+
+	while sleep 1; do
+		answer=`find_partition $1 $p`
+		[ -n "$answer" ] && break
+	done
+	[ -n "$efi" ] && mkdosfs -n EFI /dev/`find_partition $1 1`
+}
+
 partition_drive()
 {
 	echo -n > $menufile
-	for i in /sys/block/[shv]d[a-z] /sys/block/mmcblk? /sys/block/nvme*; do
-		if [ ! -d $i ]; then  # pathname expansion failed
-			continue
-		fi
+	for i in `list_disks`; do
 		echo -n `basename $i` >> $menufile
 		if [ -f $i/removable -a `cat $i/removable` -eq 0 ]; then
 			echo -n ' "Harddisk ' >> $menufile
@@ -43,23 +99,39 @@ partition_drive()
 			echo -n ' "Removable' >> $menufile
 		fi
 		if [ -f $i/size ]; then
-			echo -n " (" `cat $i/size` "blocks)" >> $menufile
+			sz=$(size_gb $i)
+			[ "$sz" = "0.00GB" ] && sz="<0.01GB"
+			printf " %10s" $sz >> $menufile
 		fi
+		for f in $i/device/model $i/*/name; do
+			[ -e $f ] && echo -n " `sed $'s/\x04//g' $f`" >> $menufile && break
+		done
+		[ "`basename $i`" = "$booted_from" -o -d $i/$booted_from ] && echo -n " *" >> $menufile
 		echo '"' >> $menufile
 	done
-	count=`wc -l $menufile | awk '{ print $1 }'`
+	count=`wc -l < $menufile`
 	if [ $count -eq 0 ]; then
 		dialog --title " Error " --msgbox \
 			"\nOK. There is no hard drive to edit partitions." 8 49
 		return 255
 	fi
-	if [ $count -eq 1 ]; then
-		choice=`awk '{ print $1 }' $menufile`
+
+	if [ $count -eq 1 -o "$AUTO_INSTALL" = "force" ]; then
+		drive=1
+	else
+		drive=`basename $AUTO_INSTALL`
+	fi
+	choice=`awk -v n=$drive '{ if (n == NR || n == $1) print $1 }' $menufile`
+	if [ -b /dev/$choice ]; then
 		retval=0
 	else
-		choose "Choose Drive" "Please select a drive to edit partitions:"
+		choose "Choose Drive" "Please select a drive to edit partitions:\n\n* - Installer source"
 	fi
 	if [ $retval -eq 0 ]; then
+		if [ -n "$AUTO_INSTALL" ]; then
+			auto_partition $choice
+			return 1
+		fi
 		dialog --title " Confirm " --defaultno --yesno "\n Do you want to use GPT?" 7 29
 		if [ $? -eq 0 ]; then
 			cgdisk /dev/$choice
@@ -78,31 +150,38 @@ partition_drive()
 select_dev()
 {
 	blkid | grep -v -E "^/dev/block/|^/dev/loop" | cut -b6- | sort | awk '{
+		l=""
 		t="unknown"
+		sub(/:/, "", $1)
 		for (i = NF; i > 1; --i)
 			if (match($i, "^TYPE")) {
 				t=$i
-				break
+				gsub(/TYPE=|"/, "", t)
+			} else if (match($i, "^LABEL")) {
+				l=$i
+				gsub(/LABEL=|"/, "", l)
 			}
-		gsub(/TYPE=|"/, "", t)
-		printf("%s\t%s\n", $1, t)
+		printf("%-11s%-12s%-18s\n", $1, t, l)
 	}' > $tempfile
 
-	lsblk=`ls /sys/block | grep -v -E "loop|ram|sr|boot|rpmb"`
-	for d in $lsblk; do
+	for d in `ls /sys/block`; do
 		for i in /sys/block/$d/$d*; do
-			echo $i | grep -q -E "boot|rpmb" && continue
-			[ -d $i ] && ( grep "`basename $i:`" $tempfile || echo "`basename $i` unknown" )
+			[ -d $i ] || continue
+			echo $i | grep -qE "loop|ram|sr|boot|rpmb" && continue
+			f=$(grep "`basename $i`" $tempfile || printf "%-11s%-29s" `basename $i` unknown)
+			sz=$(size_gb $i)
+			[ "$sz" = "0.00GB" ] || printf "$f%10s\n" $sz
 		done
-	done | awk '{
-		sub(/:/, "", $1)
-		printf("\"%-13s%-17s", $1, $2)
-		system("cd /sys/block; for f in "$1"/device/model "$1"/device/name */"$1"/../device/model */"$1"/../device/name; do [ -e $f ] && echo -n `cat $f` && break; done")
-		printf("\" \"\"\n")
+	done | awk -v b=$booted_from '{
+		if (!match($1, b)) {
+			printf("\"%s\" \"", $0)
+			system("cd /sys/block/*/"$1"; for f in ../device/model ../device/name; do [ -e $f ] && printf %-17s \"`cat $f`\" && break; done")
+			printf("\"\n")
+		}
 	} END {
-		printf("\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
+		printf("\"\" \"\"\n\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
 	}' > $menufile
-	choose "Choose Partition" "Please select a partition to install Android-x86:"
+	choose "Choose Partition" "Please select a partition to install $OS_TITLE:\n\nRecommended minimum free space - 4GB  |  Optimum free space >= 8GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
 	return $retval
 }
 
@@ -127,6 +206,7 @@ format_fs()
 {
 	local cmd
 	echo -e '"Do not format" ""\next4 ""\nntfs ""\nfat32 ""' > $menufile
+	set_answer_if_auto $FORCE_FORMAT
 	choose "Choose filesystem" "Please select a filesystem to format $1:"
 	case "$choice" in
 		ext4)
@@ -142,8 +222,8 @@ format_fs()
 			;;
 	esac
 	if [ -n "$cmd" ]; then
-		dialog --title " Confirm " --defaultno --yesno \
-			"\n You chose to format $1 to $choice.\n All data in that partition will LOSE.\n\n Are you sure to format the partition $1?" 10 51
+		[ -n "$AUTO_INSTALL" ] || dialog --title " Confirm " --defaultno --yesno \
+			"\n You chose to format $1 to $choice.\n All data in that partition will be LOST.\n\n Are you sure to format the partition $1?" 10 59
 		[ $? -ne 0 ] && return 1
 		$cmd Android-x86 /dev/$1 | awk '{
 			# FIXME: very imprecise progress
@@ -170,10 +250,10 @@ create_menulst()
 	[ -n "$VESA" ] && vga=" vga=788 modeset=0"
 	echo -e "${GRUB_OPTIONS:-default=0\ntimeout=6\nsplashimage=/grub/android-x86.xpm.gz\n}root (hd0,$1)\n" > $menulst
 
-	create_entry "Android-x86 $VER" quiet $cmdline
-	create_entry "Android-x86 $VER (Debug mode)" $cmdline DEBUG=2
-	create_entry "Android-x86 $VER (Debug nomodeset)" nomodeset $cmdline DEBUG=2
-	create_entry "Android-x86 $VER (Debug video=LVDS-1:d)" video=LVDS-1:d $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER" quiet $cmdline
+	create_entry "$OS_TITLE $VER (Debug mode)" $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER (Debug nomodeset)" nomodeset $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER (Debug video=LVDS-1:d)" video=LVDS-1:d $cmdline DEBUG=2
 }
 
 create_winitem()
@@ -239,7 +319,7 @@ create_data_img()
 try_upgrade()
 {
 	[ -d $1 ] && return
-	PREV_VERS="$PREV_VERS 7.1-rc2 7.1-rc1 6.0-r3 6.0-r2 6.0-r1 6.0-rc2 6.0-rc1 5.1-rc1 4.4-r5 4.4-r4 4.4-r3 4.4-r2 4.4-r1 4.4-RC2 4.4-RC1 4.4-test 4.3-test 4.2-test 4.0-r1 4.0-RC2 4.0-RC1"
+	PREV_VERS="$PREV_VERS 7.1-r1 7.1-rc2 7.1-rc1 6.0-r3 6.0-r2 6.0-r1 6.0-rc2 6.0-rc1 5.1-rc1 4.4-r5 4.4-r4 4.4-r3 4.4-r2 4.4-r1 4.4-RC2 4.4-RC1 4.4-test 4.3-test 4.2-test 4.0-r1 4.0-RC2 4.0-RC1"
 	for v in $PREV_VERS; do
 		local prev
 		if [ -d hd/$v ]; then
@@ -249,7 +329,8 @@ try_upgrade()
 		else
 			continue
 		fi
-		dialog --title " Question " --yesno \
+		set_answer_if_auto 1
+		adialog --title " Question " --yesno \
 			"\nAn older version $v is detected.\nWould you like to upgrade it?" 8 51
 		if [ $? -eq 0 ]; then
 			mv $prev $1
@@ -276,26 +357,45 @@ get_part_info()
 
 install_to()
 {
+	local t=`echo /sys/block/*/$1/partition`
+	[ -f "$t" ] || return 1
+	until [ -b /dev/$1 ]; do
+		echo add > `dirname $t`/uevent
+		sleep 1
+	done
 	cd /
 	mountpoint -q /hd && umount /hd
+	[ -n "$AUTO_UPDATE" ] && FORCE_FORMAT=no || FORCE_FORMAT=ext4
 	while [ 1 ]; do
 		format_fs $1
 		try_mount rw /dev/$1 /hd && break
 		dialog --clear --title " Error " --defaultno --yesno \
 			"\n Cannot mount /dev/$1\n Do you want to format it?" 8 37
 		[ $? -ne 0 ] && return 255
+		FORCE_FORMAT=ext4
 	done
 
 	fs=`cat /proc/mounts | grep /dev/$1 | awk '{ print $3 }'`
-	cmdline=`sed "s|\(initrd.*img\s*\)||; s|quiet\s*||; s|\(vga=\w\+\?\s*\)||; s|\(DPI=\w\+\?\s*\)||; s|\(INSTALL=\w\+\?\s*\)||; s|\(SRC=\S\+\?\s*\)||; s|\(DEBUG=\w\+\?\s*\)||; s|\(BOOT_IMAGE=\S\+\?\s*\)||; s|\(iso-scan/filename=\S\+\?\s*\)||;" /proc/cmdline`
+	cmdline=`sed "s|\(initrd.*img\s*\)||; s|quiet\s*||; s|\(vga=\w\+\?\s*\)||; s|\(DPI=\w\+\?\s*\)||; s|\(AUTO_INSTALL=\w\+\?\s*\)||; s|\(INSTALL=\w\+\?\s*\)||; s|\(SRC=\S\+\?\s*\)||; s|\(DEBUG=\w\+\?\s*\)||; s|\(BOOT_IMAGE=\S\+\?\s*\)||; s|\(iso-scan/filename=\S\+\?\s*\)||; s|[[:space:]]*$||" /proc/cmdline`
 
 	[ -n "$INSTALL_PREFIX" ] && asrc=$INSTALL_PREFIX || asrc=android-$VER
-	efi="`dmesg | grep EFI.VGA`"
-	[ -z "$efi" ] && dialog --title " Confirm " --no-label Skip --defaultno --yesno \
+	set_answer_if_auto 1
+	[ -z "$efi" ] && adialog --title " Confirm " --no-label Skip --defaultno --yesno \
 		"\n Do you want to install boot loader GRUB?" 7 47
 	if [ $? -eq 0 ]; then
-		cp -af /grub /hd
 		get_part_info $1
+		if fdisk -l /dev/$disk | grep -q GPT; then
+			umount /hd
+			dialog --title " Warning " --defaultno --yesno \
+				"\nFound GPT on /dev/$disk. The legacy GRUB can't be installed to GPT. Do you want to convert it to MBR?\n\nWARNING: This is a dangerous operation. You should backup your data first." 11 63
+			[ $? -eq 1 ] && rebooting
+			plist=$(sgdisk --print /dev/$disk | awk '/^  / { printf "%s:", $1 }' | sed 's/:$//')
+			sgdisk --gpttombr=$plist /dev/$disk > /dev/tty6
+			until try_mount rw /dev/$1 /hd; do
+				sleep 1
+			done
+		fi
+		cp -af /grub /hd
 		p=$(($p-1))
 		create_menulst $p
 		create_winitem $1 $d
@@ -305,35 +405,73 @@ install_to()
 		[ $? -ne 0 ] && return 255
 	fi
 
-	[ -n "$efi" ] && dialog --title " Confirm " --no-label Skip --defaultno --yesno \
+	[ -n "$efi" ] && adialog --title " Confirm " --no-label Skip --yesno \
 		"\n Do you want to install EFI GRUB2?" 7 39
 	if [ $? -eq 0 ]; then
-		get_part_info $1
-		for i in /sys/block/$disk/$disk*; do
-			[ 0`cat $i/partition` -eq 1 ] && b=$i
-			[ $(blkid /dev/`basename $i` | grep -c vfat) -ne 0 ] && b=$i && break
+		[ -z "$AUTO_INSTALL" -o -n "$AUTO_UPDATE" ] && for i in `list_disks`; do
+			disk=`basename $i`
+			esp=`sgdisk --print /dev/$disk 2> /dev/null | grep EF00 | awk '{print $1}'`
+			[ -n "$esp" ] && boot=`find_partition $disk $esp` && break
 		done
-		boot=`basename $b`
-		mountpoint -q /hd && umount /hd
-		while [ 1 ]; do
-			try_mount rw /dev/$boot /hd && break
+		if [ -z "$esp" ]; then
+			get_part_info $1
+			boot=$(blkid /dev/$disk* | grep vfat | cut -d: -f1 | head -1)
+			[ -z "$boot" ] && boot=`find_partition $disk 1` || boot=`basename $boot`
+			esp=`cat /sys/block/$disk/$boot/partition`
+		fi
+		mkdir -p efi
+		mountpoint -q efi && umount efi
+		until try_mount rw /dev/$boot efi; do
 			dialog --title " Confirm " --defaultno --yesno "\n Cannot mount /dev/$boot.\n Do you want to format it?" 8 37
 			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
 		done
-		cp -af /grub2/efi /hd
-		mkdir -p /hd/boot/grub
-		grubcfg=/hd/boot/grub/grub.cfg
-		echo -e "set timeout=5\n\n" > $grubcfg
-		echo -e "menuentry \"Android-x86 $VER\" {\n\tsearch --set=root --file /$asrc/kernel\n\tlinux /$asrc/kernel quiet $cmdline \n\tinitrd /$asrc/initrd.img\n}" >> $grubcfg
-		echo -e "menuentry \"Android-x86 $VER (DEBUG mode)\" {\n\tsearch --set=root --file /$asrc/kernel\n\tlinux /$asrc/kernel $cmdline DEBUG=2\n\tinitrd /$asrc/initrd.img\n}" >> $grubcfg
-		if [ -e /hd/EFI/Microsoft/Boot/bootmgfw.efi ]; then
-			echo -e "menuentry \"Windows (UEFI)\" {\n\tsearch --set=root --file /EFI/Microsoft/Boot/bootmgfw.efi\n\tchainloader /EFI/Microsoft/Boot/bootmgfw.efi\n}" >> $grubcfg
+		if [ "$efi" = "32" ]; then
+			grubcfg=efi/boot/grub/i386-efi/grub.cfg
+			bootefi=bootia32.efi
+		else
+			grubcfg=efi/boot/grub/x86_64-efi/grub.cfg
+			bootefi=BOOTx64.EFI
 		fi
-		mountpoint -q /hd && umount /hd
-		try_mount rw /dev/$1 /hd
+		if [ -d efi/efi/boot -a ! -s efi/efi/boot/android.cfg ]; then
+			efidir=/efi/Android
+		else
+			efidir=/efi/boot
+			rm -rf efi/efi/Android
+		fi
+		mkdir -p `dirname $grubcfg` efi$efidir
+		cp -af grub2/efi/boot/* efi$efidir
+		sed -i "s|VER|$VER|; s|CMDLINE|$cmdline|; s|OS_TITLE|$OS_TITLE|" efi$efidir/android.cfg
+		[ -s efi/boot/grub/grubenv ] || ( printf %-1024s "# GRUB Environment Block%" | sed 's/k%/k\n/; s/   /###/g' > efi/boot/grub/grubenv )
+
+		echo -e 'set timeout=5\nset debug_mode="(DEBUG mode)"' > $grubcfg
+		# Our grub-efi doesn't support ntfs directly.
+		# Copy boot files to ESP so grub-efi could read them
+		if [ "$fs" = "fuseblk" ]; then
+			cp -f src/kernel src/initrd.img efi$efidir
+			echo -e "set kdir=$efidir\nset src=SRC=/$asrc" >> $grubcfg
+		else
+			echo -e "set kdir=/$asrc" >> $grubcfg
+		fi
+		echo -e '\nsource $cmdpath/android.cfg' >> $grubcfg
+
+		# Checking for old EFI entries, removing them and adding new depending on bitness
+		efibootmgr | grep -Eo ".{0,6}Android-x86" | cut -c1-4 > /tmp/efientries
+		if [ -s /tmp/efientries ]; then
+			set_answer_if_auto 1
+			adialog --title " Question " --yesno "\nEFI boot entries for previous Android-x86 installations were found.\n\nDo you wish to delete them?" 10 61
+			[ $? -eq 0 ] && while read entry; do efibootmgr -Bb "$entry" > /dev/tty4 2>&1; done < /tmp/efientries
+		fi
+		efibootmgr -v -c -d /dev/$disk -p $esp -L "Android-x86 $VER" -l $efidir/$bootefi > /dev/tty4 2>&1
+
+		if [ -s efi/startup.nsh ]; then
+			sed -i "s|\\\\efi\\\\Android|$efidir|; s|/|\\\\|g" efi/startup.nsh
+		else
+			echo $efidir/$bootefi | sed 's|/|\\|g' > efi/startup.nsh
+		fi
 	fi
 
-	dialog --title " Question " --defaultno --yesno \
+	set_answer_if_auto 0
+	adialog --title " Question " --defaultno --yesno \
 		"\nDo you want to install /system directory as read-write?\n\nMaking /system be read-write is easier for debugging, but it needs more disk space and longer installation time." 10 61
 	instal_rw=$?
 
@@ -357,7 +495,7 @@ install_to()
 	cd hd/$asrc
 	rm -rf system*
 	( ( cd /; find $files | $CPIO -H newc -o ) | pv -ns ${size}k | ( $CPIO -iud > /dev/null; echo $? > /tmp/result )) 2>&1 \
-		| progress_bar "Installing Android-x86" "Expect to write $size KB..."
+		| progress_bar "Installing $OS_TITLE to $1" "Expect to write $size KB..."
 	result=$((`cat /tmp/result`*255))
 
 	if [ $result -eq 0 ]; then
@@ -381,19 +519,28 @@ install_to()
 
 	dialog --infobox "\n Syncing to disk..." 5 27
 	sync
+	cd /
 
 	return $result
 }
 
 install_hd()
 {
+	case "$AUTO_INSTALL" in
+		[Uu]*)
+			answer=${AUTO_UPDATE:-$(blkid | grep -v loop | grep -v iso9660 | sort | grep Android-x86 | cut -d: -f1 | head -1)}
+			answer=${answer:-$(blkid | grep -v loop | sort | grep ext4 | cut -d: -f1 | head -1)}
+			[ -b "$answer" -o -b /dev/$answer ] && answer=`basename $answer` || answer=
+			AUTO_UPDATE=${answer:-$AUTO_UPDATE}
+			;;
+		*)
+			[ -z "$answer" ] && set_answer_if_auto Create
+			;;
+	esac
+
 	select_dev || rebooting
 	retval=1
 	case "$choice" in
-		[hmnsv][dmv]*)
-			install_to $choice
-			retval=$?
-			;;
 		Create*)
 			partition_drive
 			retval=$?
@@ -401,23 +548,31 @@ install_hd()
 		Detect*)
 			dialog --title " Detecting... " --nocancel --pause "" 8 41 1
 			;;
+		*)
+			install_to $choice
+			retval=$?
+			;;
 	esac
 	return $retval
 }
 
 do_install()
 {
+	booted_from=`basename $dev`
+	efi=$(cat /sys/firmware/efi/fw_platform_size 2> /dev/null)
+	[ -n "$efi" ] && mount -t efivarfs none /sys/firmware/efi/efivars
+
 	until install_hd; do
 		if [ $retval -eq 255 ]; then
 			dialog --title ' Error! ' --yes-label Retry --no-label Reboot \
-				--yesno '\nInstallation failed! Please check if you have enough free disk space to install Android-x86.' 8 51
+				--yesno '\nInstallation failed! Please check if you have enough free disk space to install $OS_TITLE.' 8 51
 			[ $? -eq 1 ] && rebooting
 		fi
 	done
 
-	[ -n "$VESA" ] || runit="Run Android-x86"
+	[ -n "$VESA" ] || runit="Run $OS_TITLE"
 	dialog --clear --title ' Congratulations! ' \
-		--menu "\n Android-x86 is installed successfully.\n " 11 51 13 \
+		--menu "\n $OS_TITLE is installed successfully.\n " 11 51 13 \
 		"$runit" "" "Reboot" "" 2> $tempfile
 	case "`cat $tempfile`" in
 		Run*)
