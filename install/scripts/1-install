@@ -358,7 +358,7 @@ get_part_info()
 	disk=$(basename `dirname $part`)
 }
 
-install_to()
+wait_for_device()
 {
 	local t=`echo /sys/block/*/$1/partition`
 	[ -f "$t" ] || return 1
@@ -366,6 +366,11 @@ install_to()
 		echo add > `dirname $t`/uevent
 		sleep 1
 	done
+}
+
+install_to()
+{
+	wait_for_device $1 || return 1
 	cd /
 	mountpoint -q /hd && umount /hd
 	[ -n "$AUTO_UPDATE" ] && FORCE_FORMAT=no || FORCE_FORMAT=ext4
@@ -424,6 +429,7 @@ install_to()
 		fi
 		mkdir -p efi
 		mountpoint -q efi && umount efi
+		wait_for_device $boot
 		until try_mount rw /dev/$boot efi; do
 			dialog --title " Confirm " --defaultno --yesno "\n Cannot mount /dev/$boot.\n Do you want to format it?" 8 37
 			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
