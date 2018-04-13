@@ -132,12 +132,15 @@ partition_drive()
 			auto_partition $choice
 			return 1
 		fi
-		dialog --title " Confirm " --defaultno --yesno "\n Do you want to use GPT?" 7 29
-		if [ $? -eq 0 ]; then
-			cgdisk /dev/$choice
+		if fdisk -l /dev/$choice | grep -q GPT; then
+			part_tool=cgdisk
+		elif fdisk -l /dev/$choice | grep -q doesn.t; then
+			dialog --title " Confirm " --defaultno --yesno "\n Do you want to use GPT?" 7 29
+			[ $? -eq 0 ] && part_tool=cgdisk || part_tool=cfdisk
 		else
-			cfdisk /dev/$choice
+			part_tool=cfdisk
 		fi
+		$part_tool /dev/$choice
 		if [ $? -eq 0 ]; then
 			retval=1
 		else
