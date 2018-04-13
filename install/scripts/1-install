@@ -574,7 +574,7 @@ do_install()
 	until install_hd; do
 		if [ $retval -eq 255 ]; then
 			dialog --title ' Error! ' --yes-label Retry --no-label Reboot \
-				--yesno '\nInstallation failed! Please check if you have enough free disk space to install $OS_TITLE.' 8 51
+				--yesno "\nInstallation failed! Please check if you have enough free disk space to install $OS_TITLE." 8 51
 			[ $? -eq 1 ] && rebooting
 		fi
 	done
