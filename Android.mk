@@ -75,6 +75,9 @@ $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(systemimg) $(I
 	$(hide) rm -rf $@
 	$(ACP) -pr $(dir $(<D)) $@
 	$(ACP) -pr $(dir $(<D))../install/grub2/efi $@
+	img=$@/boot/grub/efi.img; dd if=/dev/zero of=$$img bs=1M count=4; \
+	mkdosfs -n EFI $$img; mmd -i $$img ::boot; \
+	mcopy -si $$img $@/efi ::; mdel -i $$img ::efi/boot/*.cfg
 
 BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,ramdisk.img initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
