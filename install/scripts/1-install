@@ -132,12 +132,15 @@ partition_drive()
 			auto_partition $choice
 			return 1
 		fi
-		dialog --title " Confirm " --defaultno --yesno "\n Do you want to use GPT?" 7 29
-		if [ $? -eq 0 ]; then
-			cgdisk /dev/$choice
+		if fdisk -l /dev/$choice | grep -q GPT; then
+			part_tool=cgdisk
+		elif fdisk -l /dev/$choice | grep -q doesn.t; then
+			dialog --title " Confirm " --defaultno --yesno "\n Do you want to use GPT?" 7 29
+			[ $? -eq 0 ] && part_tool=cgdisk || part_tool=cfdisk
 		else
-			cfdisk /dev/$choice
+			part_tool=cfdisk
 		fi
+		$part_tool /dev/$choice
 		if [ $? -eq 0 ]; then
 			retval=1
 		else
@@ -319,7 +322,7 @@ create_data_img()
 try_upgrade()
 {
 	[ -d $1 ] && return
-	PREV_VERS="$PREV_VERS 7.1-r1 7.1-rc2 7.1-rc1 6.0-r3 6.0-r2 6.0-r1 6.0-rc2 6.0-rc1 5.1-rc1 4.4-r5 4.4-r4 4.4-r3 4.4-r2 4.4-r1 4.4-RC2 4.4-RC1 4.4-test 4.3-test 4.2-test 4.0-r1 4.0-RC2 4.0-RC1"
+	PREV_VERS="$PREV_VERS 7.1-r2 7.1-r1 7.1-rc2 7.1-rc1 6.0-r3 6.0-r2 6.0-r1 6.0-rc2 6.0-rc1 5.1-rc1 4.4-r5 4.4-r4 4.4-r3 4.4-r2 4.4-r1 4.4-RC2 4.4-RC1 4.4-test 4.3-test 4.2-test 4.0-r1 4.0-RC2 4.0-RC1"
 	for v in $PREV_VERS; do
 		local prev
 		if [ -d hd/$v ]; then
@@ -355,7 +358,7 @@ get_part_info()
 	disk=$(basename `dirname $part`)
 }
 
-install_to()
+wait_for_device()
 {
 	local t=`echo /sys/block/*/$1/partition`
 	[ -f "$t" ] || return 1
@@ -363,6 +366,11 @@ install_to()
 		echo add > `dirname $t`/uevent
 		sleep 1
 	done
+}
+
+install_to()
+{
+	wait_for_device $1 || return 1
 	cd /
 	mountpoint -q /hd && umount /hd
 	[ -n "$AUTO_UPDATE" ] && FORCE_FORMAT=no || FORCE_FORMAT=ext4
@@ -421,6 +429,7 @@ install_to()
 		fi
 		mkdir -p efi
 		mountpoint -q efi && umount efi
+		wait_for_device $boot
 		until try_mount rw /dev/$boot efi; do
 			dialog --title " Confirm " --defaultno --yesno "\n Cannot mount /dev/$boot.\n Do you want to format it?" 8 37
 			[ $? -eq 0 ] && mkdosfs -n EFI /dev/$boot
@@ -565,7 +574,7 @@ do_install()
 	until install_hd; do
 		if [ $retval -eq 255 ]; then
 			dialog --title ' Error! ' --yes-label Retry --no-label Reboot \
-				--yesno '\nInstallation failed! Please check if you have enough free disk space to install $OS_TITLE.' 8 51
+				--yesno "\nInstallation failed! Please check if you have enough free disk space to install $OS_TITLE." 8 51
 			[ $? -eq 1 ] && rebooting
 		fi
 	done

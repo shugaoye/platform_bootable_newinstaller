@@ -57,5 +57,6 @@ run_qemu()
 
 # Try to run QEMU in several VGA modes
 run_qemu -vga virtio -display sdl,gl=on $@ || \
+run_qemu -vga qxl -display sdl $@ || \
 run_qemu -vga std -display sdl $@ || \
 run_qemu $@

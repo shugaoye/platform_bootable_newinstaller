@@ -15,7 +15,7 @@ auto_detect()
 	sort -r /lib/modules/`uname -r`/modules.alias | \
 		sed -n 's/^alias  *\([^ ]*\)  *\(.*\)/\1)busybox modprobe \2;;/p' >> $tmp
 	echo 'esac; done; }' >> $tmp
-	for f in $(grep -Eh "drm_kms|sound.core" /lib/modules/`uname -r`/modules.dep | cut -d. -f1); do
+	for f in $(grep -Eh "drm_kms|sound.core|hyperv" /lib/modules/`uname -r`/modules.dep | cut -d. -f1); do
 		sed -i "/$(basename $f | sed 's/-/_/g')/d" $tmp
 	done
 	source $tmp
