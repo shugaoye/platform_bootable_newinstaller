@@ -297,7 +297,7 @@ create_img()
 	dialog --title " Question " --nook --nocancel --inputbox \
 		"\nPlease input the size of the $bname in MB:" 8 63 $1 2> $tempfile
 	size=`cat $tempfile`
-	[ 0$size -le 0 ] && size=1024
+	[ 0$size -le 0 ] && size=2048
 	( dd bs=1M count=$size if=/dev/zero | pv -ns ${size}m | dd of=$2 ) 2>&1 \
 		| progress_bar "Creating $bname" "Expect to write $size MB..."
 }
@@ -305,10 +305,10 @@ create_img()
 create_data_img()
 {
 	dialog --title " Confirm " --yesno \
-		"\nThe installer is going to create a disk image to save the user data. At least 512MB free disk space is recommended.\n\nAre you sure to create the image?" 11 62
+		"\nThe installer is going to create a disk image to save the user data. At least 2048MB free disk space is recommended.\n\nAre you sure to create the image?" 11 62
 
 	if [ $? -eq 0 ]; then
-		if create_img 512 data.img; then
+		if create_img 2048 data.img; then
 			losetup /dev/loop6 data.img
 			make_ext4fs -L /data /dev/loop6 > /dev/tty6
 		fi
