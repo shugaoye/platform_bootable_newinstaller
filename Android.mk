@@ -42,7 +42,6 @@ initrd_bin := \
 	$(wildcard $(initrd_dir)/*/*)
 
 systemimg  := $(PRODUCT_OUT)/system.$(if $(MKSQUASHFS),sfs,img)
-$(if $(MKSQUASHFS),$(systemimg): | $(MKSQUASHFS))
 
 TARGET_INITRD_OUT := $(PRODUCT_OUT)/initrd
 INITRD_RAMDISK := $(TARGET_INITRD_OUT).img
