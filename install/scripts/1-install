@@ -285,6 +285,16 @@ check_data_img()
 	losetup -d /dev/loop7
 }
 
+gen_img()
+{
+	if [ "$fs" = "vfat" ]; then
+		( dd bs=1M count=$1 if=/dev/zero | pv -ns $1m | dd of=$2 ) 2>&1 \
+			| progress_bar "Creating `basename $2`" "Expect to write $1 MB..."
+	else
+		dd if=/dev/zero bs=1 count=0 seek=$1M of=$2
+	fi
+}
+
 create_img()
 {
 	bname=`basename $2`
@@ -298,8 +308,7 @@ create_img()
 		"\nPlease input the size of the $bname in MB:" 8 63 $1 2> $tempfile
 	size=`cat $tempfile`
 	[ 0$size -le 0 ] && size=2048
-	( dd bs=1M count=$size if=/dev/zero | pv -ns ${size}m | dd of=$2 ) 2>&1 \
-		| progress_bar "Creating $bname" "Expect to write $size MB..."
+	gen_img $size $2
 }
 
 create_data_img()
