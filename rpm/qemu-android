@@ -39,7 +39,7 @@ elif [ -e data.img ]; then
 	fi
 fi
 
-run_qemu()
+run_qemu_on_port()
 {
 	$QEMU -enable-kvm \
 	-kernel kernel \
@@ -51,8 +51,17 @@ run_qemu()
 	-boot menu=on \
 	-drive index=0,if=virtio,id=system,file=$SYSTEMIMG,format=raw,readonly \
 	-drive index=1,if=virtio,id=ramdisk,file=ramdisk.img,format=raw,readonly \
-	-netdev user,id=mynet,hostfwd=tcp::5555-:5555 -device virtio-net-pci,netdev=mynet \
+	-netdev user,id=mynet,hostfwd=tcp::$port-:5555 -device virtio-net-pci,netdev=mynet \
 	$DATA $@
+}
+
+run_qemu()
+{
+	port=5555
+	while [ $port -lt 5600 ]; do
+		run_qemu_on_port $@ && break
+		let port++
+	done
 }
 
 # Try to run QEMU in several VGA modes
