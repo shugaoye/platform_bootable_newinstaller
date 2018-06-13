@@ -432,7 +432,7 @@ install_to()
 		done
 		if [ -z "$esp" ]; then
 			get_part_info $1
-			boot=$(blkid /dev/$disk* | grep vfat | cut -d: -f1 | head -1)
+			boot=$(blkid /dev/$disk* | grep -v $disk: | grep vfat | cut -d: -f1 | head -1)
 			[ -z "$boot" ] && boot=`find_partition $disk 1` || boot=`basename $boot`
 			esp=`cat /sys/block/$disk/$boot/partition`
 		fi
