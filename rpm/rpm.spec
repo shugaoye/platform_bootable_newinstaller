@@ -32,7 +32,7 @@ sed -i "s|ANDROID_ROOT|/%{install_prefix}|; s|CMDLINE|%{cmdline}|" %{buildroot}%
 %post
 . /etc/os-release
 mkdir -p /%{install_prefix}/data
-if [ "$ID" = "debian" -o "$ID_LIKE" = "debian" ]; then
+if echo $ID $ID_LIKE | grep -q debian; then
 	grubcfg=/boot/grub/custom.cfg
 elif mountpoint -q /boot/efi; then
 	grubcfg=/boot/efi/EFI/$ID/custom.cfg && efi=efi
