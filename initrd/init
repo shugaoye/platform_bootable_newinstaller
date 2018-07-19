@@ -65,7 +65,8 @@ try_mount()
 	RW=$1; shift
 	if [ "${ROOT#*:/}" != "$ROOT" ]; then
 		# for NFS roots, use nolock to avoid dependency to portmapper
-		RW="nolock,$RW"
+		mount -o $RW,noatime,nolock $@
+		return $?
 	fi
 	case $(blkid $1) in
 		*TYPE=*ntfs*)
