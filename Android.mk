@@ -61,11 +61,20 @@ $(INSTALL_RAMDISK): $(wildcard $(LOCAL_PATH)/install/*/* $(LOCAL_PATH)/install/*
 	$(if $(TARGET_INSTALL_SCRIPTS),mkdir -p $(TARGET_INSTALLER_OUT)/scripts; $(ACP) -p $(TARGET_INSTALL_SCRIPTS) $(TARGET_INSTALLER_OUT)/scripts)
 	$(MKBOOTFS) $(dir $(dir $(<D))) $(TARGET_INSTALLER_OUT) | gzip -9 > $@
 
+isolinux_files := $(addprefix external/syslinux/bios/com32/, \
+	../core/isolinux.bin \
+	chain/chain.c32 \
+	elflink/ldlinux/ldlinux.c32 \
+	lib/libcom32.c32 \
+	libutil/libutil.c32 \
+	menu/vesamenu.c32)
+
 boot_dir := $(PRODUCT_OUT)/boot
-$(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(systemimg) $(INSTALL_RAMDISK) $(GENERIC_X86_CONFIG_MK) | $(ACP)
+$(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(isolinux_files) $(systemimg) $(INSTALL_RAMDISK) $(GENERIC_X86_CONFIG_MK) | $(ACP)
 	$(hide) rm -rf $@
 	$(ACP) -pr $(dir $(<D)) $@
 	$(ACP) -pr $(dir $(<D))../install/grub2/efi $@
+	$(ACP) $(isolinux_files) $@/isolinux
 	img=$@/boot/grub/efi.img; dd if=/dev/zero of=$$img bs=1M count=4; \
 	mkdosfs -n EFI $$img; mmd -i $$img ::boot; \
 	mcopy -si $$img $@/efi ::; mdel -i $$img ::efi/boot/*.cfg
