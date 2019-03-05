@@ -46,10 +46,13 @@ if test x"$HAS_CTTY" != x"Yes"; then
 	if test -z "$DEBUG" || test -n "$INSTALL"; then
 		echo 0 0 0 0 > /proc/sys/kernel/printk
 	fi
-	# initialise /dev (first time)
-	mkdir -p /dev/block
+	# populate /dev
 	echo /sbin/mdev > /proc/sys/kernel/hotplug
 	mdev -s
+	sleep 3
+	# initialise /dev (first time)
+	mkdir -p /dev/block
+	echo 0 > /proc/sys/kernel/printk
 	# re-run this script with a controlling tty
 	exec env HAS_CTTY=Yes setsid cttyhack /bin/sh "$0" "$@"
 fi
