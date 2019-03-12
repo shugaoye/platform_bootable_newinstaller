@@ -497,7 +497,8 @@ install_to()
 		fi
 	fi
 
-	set_answer_if_auto 0
+	! test -f hd/$asrc/system.img -o -d hd/$asrc/system
+	set_answer_if_auto $?
 	adialog --title " Question " --defaultno --yesno \
 		"\nDo you want to install /system directory as read-write?\n\nMaking /system be read-write is easier for debugging, but it needs more disk space and longer installation time." 10 61
 	if [ $? -eq 0 -a -e /sfs/system.img ]; then
