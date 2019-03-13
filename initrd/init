@@ -182,7 +182,7 @@ if [ -n "$INSTALL" ]; then
 fi
 
 if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
-	mv /bin /lib .
+	mv -f /bin /lib .
 	sed -i 's|\( PATH.*\)|\1:/bin|' init.environ.rc
 	rm /sbin/modprobe
 	busybox mv /sbin/* sbin
