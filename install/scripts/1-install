@@ -353,7 +353,7 @@ try_upgrade()
 		if [ -d "$prev" ]; then
 			mv $prev $1
 			rm -rf $1/data/dalvik-cache/* $1/data/system/wpa_supplicant
-			sed -i 's/\(ctrl_interface=\)\(.*\)/\1wlan0/' $1/data/misc/wifi/wpa_supplicant.conf
+			[ -s $1/data/misc/wifi/wpa_supplicant.conf ] && sed -i 's/\(ctrl_interface=\)\(.*\)/\1wlan0/' $1/data/misc/wifi/wpa_supplicant.conf
 		fi
 	fi
 }
