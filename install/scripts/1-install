@@ -213,7 +213,7 @@ format_fs()
 	choose "Choose filesystem" "Please select a filesystem to format $1:"
 	case "$choice" in
 		ext4)
-			cmd="make_ext4fs -L"
+			cmd="mkfs.ext3 -L"
 			;;
 		ntfs)
 			cmd="mkntfs -fL"
@@ -233,6 +233,7 @@ format_fs()
 			if (match($0, "done"))
 				printf("%d\n", i+=33)
 		}' | progress_bar "Formatting" "Formatting partition $1..."
+		convert_fs $1
 	elif blkid /dev/$1 | grep -q ext[23]; then
 		dialog --clear --title " Warning " --yesno \
 			"\nYou chose to install android-x86 to an ext2/3 filesystem. We suggest you convert it to ext4 for better reliability and performance." 9 62
@@ -319,7 +320,7 @@ create_data_img()
 	if [ $? -eq 0 ]; then
 		if create_img 2048 data.img; then
 			losetup /dev/loop6 data.img
-			make_ext4fs -L /data /dev/loop6 > /dev/tty6
+			mkfs.ext4 -L /data /dev/loop6 > /dev/tty6
 		fi
 		[ $? -ne 0 ] && dialog --msgbox "\n Failed to create data.img." 7 33
 	else
