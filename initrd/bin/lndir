@@ -12,9 +12,19 @@ usage()
 	exit 1
 }
 
+make_dir()
+{
+	[ -d "$2" ] || mkdir -p "$2"
+	if [ "`id -u`" = "0" ]; then
+		chmod `stat -c "%a" "$1"` "$2"
+		chown `stat -c "%u.%g" "$1"` "$2"
+	fi
+}
+
 linkdir()
 {
 	local odir="$PWD"
+	make_dir "$1" "$2"
 	[ -d "$2" ] || mkdir -p "$2"
 	cd "$2"
 	local d="$PWD"
@@ -30,6 +40,8 @@ linkdir()
 	done
 	cd "$odir"
 }
+
+[ -d /system/bin ] && PATH=/system/bin:$PATH
 
 [ -z "$src" ] && usage
 
