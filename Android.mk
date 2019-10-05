@@ -74,6 +74,7 @@ $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(isolinux_files
 	$(ACP) -pr $(dir $(<D)) $@
 	$(ACP) -pr $(dir $(<D))../install/grub2/efi $@
 	$(ACP) $(isolinux_files) $@/isolinux
+	PATH="/sbin:/usr/sbin:/bin:/usr/bin"; \
 	img=$@/boot/grub/efi.img; dd if=/dev/zero of=$$img bs=1M count=4; \
 	mkdosfs -n EFI $$img; mmd -i $$img ::boot; \
 	mcopy -si $$img $@/efi ::; mdel -i $$img ::efi/boot/*.cfg
@@ -81,14 +82,15 @@ $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(isolinux_files
 BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,ramdisk.img initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
 
-GENISOIMG := $(if $(shell which xorriso 2> /dev/null),xorriso -as mkisofs,genisoimage)
 ISO_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).iso
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	@echo ----- Making iso image ------
 	$(hide) sed -i "s|\(Installation CD\)\(.*\)|\1 $(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</isolinux/isolinux.cfg
 	$(hide) sed -i "s|VER|$(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</efi/boot/android.cfg
 	sed -i "s|OS_TITLE|$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86)|" $</isolinux/isolinux.cfg $</efi/boot/android.cfg
-	$(GENISOIMG) -vJURT -b isolinux/isolinux.bin -c isolinux/boot.cat \
+	PATH="/sbin:/usr/sbin:/bin:/usr/bin"; \
+	which xorriso > /dev/null 2>&1 && GENISOIMG="xorriso -as mkisofs" || GENISOIMG=genisoimage; \
+	$$GENISOIMG -vJURT -b isolinux/isolinux.bin -c isolinux/boot.cat \
 		-no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
 		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) LiveCD" -o $@ $^
 	$(hide) external/syslinux/bios/utils/isohybrid.pl $@
@@ -98,6 +100,7 @@ rpm: $(wildcard $(LOCAL_PATH)/rpm/*) $(BUILT_IMG)
 	@echo ----- Making an rpm ------
 	OUT=$(abspath $(PRODUCT_OUT)); mkdir -p $$OUT/rpm/BUILD; rm -rf $$OUT/rpm/RPMS/*; $(ACP) $< $$OUT; \
 	echo $(VER) | grep -vq rc; EPOCH=$$((-$$? + `echo $(VER) | cut -d. -f1`)); \
+	PATH="/sbin:/usr/sbin:/bin:/usr/bin"; \
 	rpmbuild -bb --target=$(if $(filter x86,$(TARGET_ARCH)),i686,x86_64) -D"cmdline $(BOARD_KERNEL_CMDLINE)" \
 		-D"_topdir $$OUT/rpm" -D"_sourcedir $$OUT" -D"systemimg $(notdir $(systemimg))" -D"ver $(VER)" -D"epoch $$EPOCH" \
 		$(if $(BUILD_NAME_VARIANT),-D"name $(BUILD_NAME_VARIANT)") \
