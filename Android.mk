@@ -46,7 +46,7 @@ TARGET_INITRD_OUT := $(PRODUCT_OUT)/initrd
 INITRD_RAMDISK := $(TARGET_INITRD_OUT).img
 $(INITRD_RAMDISK): $(initrd_bin) $(systemimg) $(TARGET_INITRD_SCRIPTS) | $(ACP) $(MKBOOTFS)
 	$(hide) rm -rf $(TARGET_INITRD_OUT)
-	mkdir -p $(addprefix $(TARGET_INITRD_OUT)/,android hd iso lib mnt proc scripts sfs sys tmp)
+	mkdir -p $(addprefix $(TARGET_INITRD_OUT)/,android apex hd iso lib mnt proc scripts sfs sys tmp)
 	$(if $(TARGET_INITRD_SCRIPTS),$(ACP) -p $(TARGET_INITRD_SCRIPTS) $(TARGET_INITRD_OUT)/scripts)
 	ln -s /bin/ld-linux.so.2 $(TARGET_INITRD_OUT)/lib
 	echo "VER=$(VER)" > $(TARGET_INITRD_OUT)/scripts/00-ver
@@ -79,7 +79,7 @@ $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(isolinux_files
 	mkdosfs -n EFI $$img; mmd -i $$img ::boot; \
 	mcopy -si $$img $@/efi ::; mdel -i $$img ::efi/boot/*.cfg
 
-BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,ramdisk.img initrd.img install.img) $(systemimg)
+BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
 
 ISO_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).iso

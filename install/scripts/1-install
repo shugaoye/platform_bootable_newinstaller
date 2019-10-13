@@ -334,7 +334,7 @@ try_upgrade()
 	[ -d $1 ] && return
 
 	for d in hd/*; do
-		[ -e "$d"/ramdisk.img -a -n "`ls "$d"/system* 2> /dev/null`" ] && echo \"`basename $d`\" \"\"
+		[ -n "`ls "$d"/system* 2> /dev/null`" ] && echo \"`basename $d`\" \"\"
 	done | sort -r > $menufile
 
 	count=`wc -l < $menufile`
@@ -507,7 +507,7 @@ install_to()
 	else
 		sysimg="mnt/$SRC/system.*"
 	fi
-	files="mnt/$SRC/kernel mnt/$SRC/initrd.img mnt/$SRC/$RAMDISK $sysimg"
+	files="mnt/$SRC/kernel mnt/$SRC/initrd.img $sysimg"
 	size=0
 	for s in `du -sk $files | awk '{print $1}'`; do
 		size=$(($size+$s))
@@ -515,7 +515,7 @@ install_to()
 	try_upgrade hd/$asrc
 	mkdir -p hd/$asrc
 	cd hd/$asrc
-	rm -rf system*
+	rm -rf system* *.img
 	( ( cd /; find $files | $CPIO -H newc -o ) | pv -ns ${size}k | ( $CPIO -iud > /dev/null; echo $? > /tmp/result )) 2>&1 \
 		| progress_bar "Installing $OS_TITLE to $1" "Expect to write $size KB..."
 	result=$((`cat /tmp/result`*255))

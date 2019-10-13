@@ -97,32 +97,23 @@ check_root()
 		mkdir /mnt/iso
 		mount -o loop /iso/$iso /mnt/iso
 	fi
-	if [ -e /mnt/$SRC/$RAMDISK ]; then
-		zcat /mnt/$SRC/$RAMDISK | cpio -id > /dev/null
-	elif [ -b /dev/$RAMDISK ]; then
-		zcat /dev/$RAMDISK | cpio -id > /dev/null
-	else
-		return 1
-	fi
 	if [ -e /mnt/$SRC/system.sfs ]; then
-		mount -o loop,noatime /mnt/$SRC/system.sfs system
-		if [ -e system/system.img ]; then
-			mount --move system /sfs
-			mount -o loop,noatime /sfs/system.img system
+		mount -o loop,noatime /mnt/$SRC/system.sfs android
+		if [ -e android/system.img ]; then
+			mount --move android /sfs
+			mount -o loop,noatime /sfs/system.img android
 		fi
 	elif [ -e /mnt/$SRC/system.img ]; then
 		remount_rw
-		mount -o loop,noatime /mnt/$SRC/system.img system
+		mount -o loop,noatime /mnt/$SRC/system.img android
 	elif [ -d /mnt/$SRC/system ]; then
 		remount_rw
-		mount --bind /mnt/$SRC/system system
-	elif [ -z "$SRC" -a -e /mnt/build.prop ]; then
-		mount --bind /mnt system
+		mount --bind /mnt/$SRC/system android
+	elif [ -z "$SRC" -a -e /mnt/default.prop ]; then
+		mount --bind /mnt android
 	else
-		rm -rf *
 		return 1
 	fi
-	mkdir -p mnt
 	echo " found at $1"
 	rm /sbin/mke2fs
 	hash -r
@@ -142,14 +133,13 @@ debug_shell()
 		USER="($1)" system/bin/sh -l 2>&1
 	else
 		echo Running busybox ash...
-		sh 2>&1
+		busybox sh 2>&1
 	fi
 }
 
 echo -n Detecting Android-x86...
 
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
-[ -z "$RAMDISK" ] && RAMDISK=ramdisk.img || RAMDISK=${RAMDISK##/dev/}
 
 for c in `cat /proc/cmdline`; do
 	case $c in
@@ -162,8 +152,7 @@ for c in `cat /proc/cmdline`; do
 	esac
 done
 
-mount -t tmpfs tmpfs /android
-cd /android
+cd /
 while :; do
 	for device in ${ROOT:-/dev/[hmnsv][dmrv][0-9a-z]*}; do
 		check_root $device && break 2
@@ -172,23 +161,20 @@ while :; do
 	sleep 1
 	echo -n .
 done
+cd /android
 
 ln -s mnt/$SRC /src
 ln -s android/system /
 ln -s ../system/lib/firmware ../system/lib/modules /lib
 
-if [ -n "$INSTALL" ]; then
-	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
+if [ -d system/apex/com.android.runtime.debug ]; then
+	ln -s ../android/system/apex/com.android.runtime.debug /apex/com.android.runtime
+else
+	ln -s ../android/system/apex/com.android.runtime.release /apex/com.android.runtime
 fi
 
-if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
-	mv -f /bin /lib .
-	sed -i 's|\( PATH.*\)|\1:/bin|' init.environ.rc
-	rm /sbin/modprobe
-	busybox mv /sbin/* sbin
-	rmdir /sbin
-	ln -s android/bin android/lib android/sbin /
-	hash -r
+if [ -n "$INSTALL" ]; then
+	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
 fi
 
 # load scripts
