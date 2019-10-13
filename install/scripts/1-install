@@ -213,7 +213,7 @@ format_fs()
 	choose "Choose filesystem" "Please select a filesystem to format $1:"
 	case "$choice" in
 		ext4)
-			cmd="mkfs.ext3 -L"
+			cmd="mkfs.ext4 -L"
 			;;
 		ntfs)
 			cmd="mkntfs -fL"
