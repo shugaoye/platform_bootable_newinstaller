@@ -478,7 +478,7 @@ install_to()
 		fi
 		echo -e '\nsource $cmdpath/android.cfg' >> $grubcfg
 		if [ -d src/boot/grub/theme ]; then
-			cp -a src/boot/grub/[ft]* efi/boot/grub
+			cp -R src/boot/grub/[ft]* efi/boot/grub
 			find efi/boot/grub -name TRANS.TBL -delete
 		fi
 
