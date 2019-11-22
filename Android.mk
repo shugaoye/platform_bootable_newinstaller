@@ -92,7 +92,7 @@ $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	which xorriso > /dev/null 2>&1 && GENISOIMG="xorriso -as mkisofs" || GENISOIMG=genisoimage; \
 	$$GENISOIMG -vJURT -b isolinux/isolinux.bin -c isolinux/boot.cat \
 		-no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
-		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) LiveCD" -o $@ $^
+		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) $(VER) ($(TARGET_ARCH))" -o $@ $^
 	$(hide) external/syslinux/bios/utils/isohybrid.pl $@
 	@echo -e "\n\n$@ is built successfully.\n\n"
 
