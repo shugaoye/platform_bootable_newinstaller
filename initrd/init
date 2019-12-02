@@ -114,7 +114,7 @@ check_root()
 	elif [ -d /mnt/$SRC/system ]; then
 		remount_rw
 		mount --bind /mnt/$SRC/system system
-	elif [ -e /mnt/build.prop ]; then
+	elif [ -z "$SRC" -a -e /mnt/build.prop ]; then
 		mount --bind /mnt system
 	else
 		rm -rf *
