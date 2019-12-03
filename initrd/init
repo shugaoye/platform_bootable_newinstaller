@@ -96,7 +96,6 @@ check_root()
 		mount --move /mnt /iso
 		mkdir /mnt/iso
 		mount -o loop /iso/$iso /mnt/iso
-		SRC=iso
 	fi
 	if [ -e /mnt/$SRC/$RAMDISK ]; then
 		zcat /mnt/$SRC/$RAMDISK | cpio -id > /dev/null
@@ -152,6 +151,7 @@ echo -n Detecting Android-x86...
 for c in `cat /proc/cmdline`; do
 	case $c in
 		iso-scan/filename=*)
+			SRC=iso
 			eval `echo $c | cut -b1-3,18-`
 			;;
 		*)
