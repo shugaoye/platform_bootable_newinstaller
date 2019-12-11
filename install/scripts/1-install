@@ -171,7 +171,7 @@ select_dev()
 		for i in /sys/block/$d/$d*; do
 			[ -d $i ] || continue
 			echo $i | grep -qE "loop|ram|sr|boot|rpmb" && continue
-			f=$(grep "`basename $i`" $tempfile || printf "%-11s%-29s" `basename $i` unknown)
+			f=$(grep "`basename $i`" $tempfile || printf "%-11s%-30s" `basename $i` unknown)
 			sz=$(size_gb $i)
 			[ "$sz" = "0.00GB" ] || printf "$f%10s\n" $sz
 		done
