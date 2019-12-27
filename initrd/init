@@ -212,10 +212,7 @@ if [ 0$DEBUG -gt 1 ]; then
 	echo -e "Type 'exit' to enter Android...\n"
 
 	debug_shell debug-late
-	SETUPWIZARD=${SETUPWIZARD:-0}
 fi
-
-[ "$SETUPWIZARD" = "0" ] && echo "ro.setupwizard.mode=DISABLED" >> default.prop
 
 [ -n "$DEBUG" ] && SWITCH=${SWITCH:-chroot}
 
