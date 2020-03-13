@@ -110,10 +110,10 @@ check_root()
 	elif [ -e /mnt/$SRC/system.img ]; then
 		remount_rw
 		mount -o loop,noatime /mnt/$SRC/system.img system
-	elif [ -d /mnt/$SRC/system ]; then
+	elif [ -s /mnt/$SRC/system/build.prop ]; then
 		remount_rw
 		mount --bind /mnt/$SRC/system system
-	elif [ -z "$SRC" -a -e /mnt/build.prop ]; then
+	elif [ -z "$SRC" -a -s /mnt/build.prop ]; then
 		mount --bind /mnt system
 	else
 		rm -rf *
