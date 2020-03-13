@@ -14,7 +14,6 @@
 
 ifneq ($(filter x86%,$(TARGET_ARCH)),)
 LOCAL_PATH := $(call my-dir)
-include $(CLEAR_VARS)
 
 include $(CLEAR_VARS)
 LOCAL_IS_HOST_MODULE := true
@@ -84,6 +83,7 @@ BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_
 
 GENISOIMG := $(if $(shell which xorriso 2> /dev/null),xorriso -as mkisofs,genisoimage)
 ISO_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).iso
+ISOHYBRID := LD_LIBRARY_PATH=$(LOCAL_PATH)/install/lib external/syslinux/bios/utils/isohybrid
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	@echo ----- Making iso image ------
 	$(hide) sed -i "s|\(Installation CD\)\(.*\)|\1 $(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</isolinux/isolinux.cfg
@@ -92,7 +92,7 @@ $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	$(GENISOIMG) -vJURT -b isolinux/isolinux.bin -c isolinux/boot.cat \
 		-no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
 		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) $(VER) ($(TARGET_ARCH))" -o $@ $^
-	$(hide) external/syslinux/bios/utils/isohybrid.pl $@
+	$(hide) $(ISOHYBRID) --uefi $@
 	@echo -e "\n\n$@ is built successfully.\n\n"
 
 rpm: $(wildcard $(LOCAL_PATH)/rpm/*) $(BUILT_IMG)
