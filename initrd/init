@@ -106,10 +106,10 @@ check_root()
 	elif [ -e /mnt/$SRC/system.img ]; then
 		remount_rw
 		mount -o loop,noatime /mnt/$SRC/system.img android
-	elif [ -d /mnt/$SRC/system ]; then
+	elif [ -s /mnt/$SRC/system/default.prop ]; then
 		remount_rw
 		mount --bind /mnt/$SRC/system android
-	elif [ -z "$SRC" -a -e /mnt/default.prop ]; then
+	elif [ -z "$SRC" -a -s /mnt/default.prop ]; then
 		mount --bind /mnt android
 	else
 		return 1
