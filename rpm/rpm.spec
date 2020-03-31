@@ -5,9 +5,8 @@ Release: %(echo %{ver} | cut -d- -f2)
 Epoch: %{epoch}
 Source1: kernel
 Source2: initrd.img
-Source3: ramdisk.img
-Source4: %{systemimg}
-Source5: qemu-android
+Source3: %{systemimg}
+Source4: qemu-android
 License: Apache Public License / GPLv2
 Group: Operating system/Android
 URL: http://www.android-x86.org
@@ -25,9 +24,9 @@ or later.
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{install_prefix} %{buildroot}%{_bindir}
-install -m644 %{S:1} %{S:2} %{S:3} %{S:4} %{buildroot}/%{install_prefix}
-install -m755 %{S:5} %{buildroot}%{_bindir}
-sed -i "s|ANDROID_ROOT|/%{install_prefix}|; s|CMDLINE|%{cmdline}|" %{buildroot}%{_bindir}/`basename %{S:5}`
+install -m644 %{S:1} %{S:2} %{S:3} %{buildroot}/%{install_prefix}
+install -m755 %{S:4} %{buildroot}%{_bindir}
+sed -i "s|ANDROID_ROOT|/%{install_prefix}|; s|CMDLINE|%{cmdline}|" %{buildroot}%{_bindir}/`basename %{S:4}`
 
 %post
 . /etc/os-release
