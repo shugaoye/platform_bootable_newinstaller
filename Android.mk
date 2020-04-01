@@ -27,7 +27,7 @@ VER ?= $$(date +"%F")
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)
-MKSQUASHFS := $(MAKE_SQUASHFS)
+MKSQUASHFS := $(HOST_OUT_EXECUTABLES)/mksquashfs$(HOST_EXECUTABLE_SUFFIX)
 
 define build-squashfs-target
 	$(hide) $(MKSQUASHFS) $(1) $(2) -noappend -comp gzip
