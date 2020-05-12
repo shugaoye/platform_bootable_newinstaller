@@ -3,8 +3,6 @@
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
 # and Thorsten Glaser <tg@mirbsd.org>
 #
-# Last updated 2018/01/26
-#
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
 # with Android-x86 project.
@@ -178,8 +176,8 @@ if [ -n "$INSTALL" ]; then
 	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
 fi
 
-if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
-	mv /bin /lib .
+if [ -x system/bin/ln -a -n "$BUSYBOX" ]; then
+	mv -f /bin /lib .
 	sed -i 's|\( PATH.*\)|\1:/bin|' init.environ.rc
 	rm /sbin/modprobe
 	busybox mv /sbin/* sbin
