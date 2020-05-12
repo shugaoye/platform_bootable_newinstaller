@@ -135,6 +135,7 @@ debug_shell()
 	if [ -x system/bin/sh ]; then
 		echo Running MirBSD Korn Shell...
 		USER="($1)" system/bin/sh -l 2>&1
+		[ $? -ne 0 ] && /bin/sh 2>&1
 	else
 		echo Running busybox ash...
 		sh 2>&1
