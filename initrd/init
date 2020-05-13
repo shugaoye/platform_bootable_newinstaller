@@ -3,8 +3,6 @@
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
 # and Thorsten Glaser <tg@mirbsd.org>
 #
-# Last updated 2018/01/26
-#
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
 # with Android-x86 project.
@@ -140,6 +138,7 @@ debug_shell()
 	if [ -x system/bin/sh ]; then
 		echo Running MirBSD Korn Shell...
 		USER="($1)" system/bin/sh -l 2>&1
+		[ $? -ne 0 ] && /bin/sh 2>&1
 	else
 		echo Running busybox ash...
 		sh 2>&1
@@ -181,7 +180,7 @@ if [ -n "$INSTALL" ]; then
 	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
 fi
 
-if [ -x system/bin/ln -a \( -n "$DEBUG" -o -n "$BUSYBOX" \) ]; then
+if [ -x system/bin/ln -a -n "$BUSYBOX" ]; then
 	mv -f /bin /lib .
 	sed -i 's|\( PATH.*\)|\1:/bin|' init.environ.rc
 	rm /sbin/modprobe
