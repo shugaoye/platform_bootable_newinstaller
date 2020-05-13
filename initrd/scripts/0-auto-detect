@@ -1,6 +1,5 @@
 #
 # By Chih-Wei Huang <cwhuang@linux.org.tw>
-# Last updated 2017/01/17
 #
 # License: GNU Public License
 # We explicitely grant the right to use the scripts
@@ -13,7 +12,7 @@ auto_detect()
 	tmp=/tmp/dev2mod
 	echo 'dev2mod() { while read dev; do case $dev in' > $tmp
 	sort -r /lib/modules/`uname -r`/modules.alias | \
-		sed -n 's/^alias  *\([^ ]*\)  *\(.*\)/\1)busybox modprobe \2;;/p' >> $tmp
+		sed -n 's/[()]/*/g; s/^alias  *\([^ ]*\)  *\(.*\)/\1)busybox modprobe \2;;/p' >> $tmp
 	echo 'esac; done; }' >> $tmp
 	for f in $(grep -Eh "drm_kms|sound.core|hyperv" /lib/modules/`uname -r`/modules.dep | cut -d. -f1); do
 		sed -i "/$(basename $f | sed 's/-/_/g')/d" $tmp

@@ -353,6 +353,9 @@ try_upgrade()
 		prev=hd/$choice
 		if [ -d "$prev" ]; then
 			mv $prev $1
+			for d in `find hd -type l -maxdepth 1`; do
+				[ "`readlink $d`" = "$choice" ] && ln -sf `basename $1` $d
+			done
 			rm -rf $1/data/dalvik-cache/* $1/data/system/wpa_supplicant
 			[ -s $1/data/misc/wifi/wpa_supplicant.conf ] && sed -i 's/\(ctrl_interface=\)\(.*\)/\1wlan0/' $1/data/misc/wifi/wpa_supplicant.conf
 		fi
@@ -498,6 +501,8 @@ install_to()
 		fi
 	fi
 
+	try_upgrade hd/$asrc
+
 	! test -f hd/$asrc/system.img -o -d hd/$asrc/system
 	set_answer_if_auto $?
 	adialog --title " Question " --defaultno --yesno \
@@ -512,7 +517,7 @@ install_to()
 	for s in `du -sk $files | awk '{print $1}'`; do
 		size=$(($size+$s))
 	done
-	try_upgrade hd/$asrc
+
 	mkdir -p hd/$asrc
 	cd hd/$asrc
 	rm -rf system* *.img
