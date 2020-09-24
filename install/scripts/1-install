@@ -256,6 +256,12 @@ create_menulst()
 
 	create_entry "$OS_TITLE $VER" quiet $cmdline
 	create_entry "$OS_TITLE $VER (Debug mode)" $cmdline DEBUG=2
+	create_entry "$OS_TITLE $VER (Debug mode) gralloc.gbm" $cmdline DEBUG=2 GRALLOC=gbm
+	create_entry "$OS_TITLE $VER (Debug mode) drmfb-composer gralloc.gbm" $cmdline DEBUG=2 HWC=drmfb GRALLOC=gbm
+	create_entry "$OS_TITLE $VER (Debug mode) hwcomposer.drm gralloc.gbm" $cmdline DEBUG=2 HWC=drm GRALLOC=gbm
+	create_entry "$OS_TITLE $VER (Debug mode) gralloc.minigbm" DEBUG=2 GRALLOC=minigbm
+	create_entry "$OS_TITLE $VER (Debug mode) hwcomposer.drm_minigbm gralloc.minigbm" DEBUG=2 HWC=drm_minigbm GRALLOC=minigbm
+	create_entry "$OS_TITLE $VER (Debug mode) hwcomposer.intel gralloc.intel" DEBUG=2 HWC=intel GRALLOC=intel
 	create_entry "$OS_TITLE $VER (Debug nomodeset)" nomodeset $cmdline DEBUG=2
 	create_entry "$OS_TITLE $VER (Debug video=LVDS-1:d)" video=LVDS-1:d $cmdline DEBUG=2
 }
