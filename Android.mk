@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+BUILD_TOP := $(shell pwd)
 
 ifneq ($(filter x86%,$(TARGET_ARCH)),)
 LOCAL_PATH := $(call my-dir)
+
+RELEASE_OS_TITLE := ax86-11
 
 include $(CLEAR_VARS)
 LOCAL_IS_HOST_MODULE := true
@@ -81,7 +84,16 @@ $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(isolinux_files
 BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
 
-ISO_IMAGE := $(PRODUCT_OUT)/$(TARGET_PRODUCT).iso
+# Grab branch names
+KRNL := $(shell cd $(BUILD_TOP)/kernel ; git name-rev --name-only HEAD | cut -d '/' -f3)
+MSA := $(shell cd $(BUILD_TOP)/external/mesa ; git name-rev --name-only HEAD | cut -d '/' -f3)
+
+# Use vendor defined version names
+ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-$(TARGET_PRODUCT)-$(shell date +%Y%m%d%H%M)
+
+BUILD_NAME_VARIANT := $(ROM_VENDOR_VERSION)
+
+ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA).iso
 ISOHYBRID := LD_LIBRARY_PATH=$(LOCAL_PATH)/install/lib external/syslinux/bios/utils/isohybrid
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	# Generate Changelog
