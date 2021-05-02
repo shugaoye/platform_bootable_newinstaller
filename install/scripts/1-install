@@ -594,6 +594,10 @@ do_install()
 	booted_from=`basename $dev`
 	efi=$(cat /sys/firmware/efi/fw_platform_size 2> /dev/null)
 	[ -n "$efi" ] && mount -t efivarfs none /sys/firmware/efi/efivars
+	
+	chmod 755 /sbin/grub
+	chmod 755 /sbin/mkntfs
+	chmod 755 /sbin/efibootmgr
 
 	until install_hd; do
 		if [ $retval -eq 255 ]; then
