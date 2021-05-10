@@ -105,7 +105,7 @@ ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA).iso
 ISOHYBRID := LD_LIBRARY_PATH=$(LOCAL_PATH)/install/lib external/syslinux/bios/utils/isohybrid
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	# Generate Changelog
-	$(hide) ./bootable/newinstaller/tools/changelog
+	bash bootable/newinstaller/tools/changelog
 	$(hide) mv Changelog.txt $(PRODUCT_OUT)/Changelog-$(BUILD_NAME_VARIANT).txt
 	@echo ----- Making iso image ------
 	$(hide) sed -i "s|\(Installation CD\)\(.*\)|\1 $(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</isolinux/isolinux.cfg

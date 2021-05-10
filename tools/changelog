@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BUILD_TOP := $(shell pwd)
+BUILD_TOP="$ANDROID_BUILD_TOP"
 echo $BUILD_TOP
 Changelog=Changelog.txt
 
@@ -15,12 +15,11 @@ touch $Changelog
 
 # Print something to build output
 echo ${bldppl}"Generating changelog..."${txtrst}
-
 for i in $(seq 30);
 do
-export After_Date=`date --date="$i days ago" +%m-%d-%Y`
+export After_Date=`/bin/date --date="$i days ago" +%F`
 k=$(expr $i - 1)
-	export Until_Date=`date --date="$k days ago" +%m-%d-%Y`
+	export Until_Date=`/bin/date --date="$k days ago" +%F`
 
 	# Line with after --- until was too long for a small ListView
 	echo '====================' >> $Changelog;
