@@ -208,10 +208,13 @@ convert_fs()
 format_fs()
 {
 	local cmd
-	echo -e '"Do not re-format" ""\next4 ""\nntfs ""\nfat32 ""' > $menufile
+	echo -e '"Do not re-format" ""\next3 ""\next4 ""\nntfs ""\nfat32 ""' > $menufile
 	set_answer_if_auto $FORCE_FORMAT
-	choose "Choose filesystem" "Please select a filesystem to format $1:"
+	choose "Choose filesystem" "Please select a filesystem to format $1 (Note that ext4 is not working for MBR, use ext3):"
 	case "$choice" in
+		ext3)
+			cmd="mkfs.ext3 -L"
+			;;
 		ext4)
 			cmd="mkfs.ext4 -L"
 			;;
@@ -428,6 +431,7 @@ install_to()
 			done
 		fi
 		cp -af /grub /hd
+		get_part_info $1
 		p=$(($p-1))
 		create_menulst $p
 		create_winitem $1 $d
