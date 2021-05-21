@@ -16,7 +16,7 @@ BUILD_TOP := $(shell pwd)
 ifneq ($(filter x86%,$(TARGET_ARCH)),)
 LOCAL_PATH := $(call my-dir)
 
-RELEASE_OS_TITLE := ax86-11
+RELEASE_OS_TITLE := BlissOS-$(VERSION)
 
 include $(CLEAR_VARS)
 LOCAL_IS_HOST_MODULE := true
@@ -95,13 +95,14 @@ BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_
 # Grab branch names
 KRNL := $(shell cd $(BUILD_TOP)/kernel ; git name-rev --name-only HEAD | cut -d '/' -f3)
 MSA := $(shell cd $(BUILD_TOP)/external/mesa ; git name-rev --name-only HEAD | cut -d '/' -f3)
+HWC := $(shell cd $(BUILD_TOP)/external/drm_hwcomposer ; git name-rev --name-only HEAD | cut -d '/' -f3)
 
 # Use vendor defined version names
-ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-$(TARGET_PRODUCT)-$(shell date +%Y%m%d%H%M)
+ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-$(TARGET_ARCH)-$(shell date +%Y%m%d%H%M)
 
 BUILD_NAME_VARIANT := $(ROM_VENDOR_VERSION)
 
-ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA).iso
+ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA)_h-$(HWC).iso
 ISOHYBRID := LD_LIBRARY_PATH=$(LOCAL_PATH)/install/lib external/syslinux/bios/utils/isohybrid
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	# Generate Changelog
