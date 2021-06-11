@@ -140,6 +140,7 @@ $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) $(VER) ($(TARGET_ARCH))" -o $@ $^
 	$(hide) $(ISOHYBRID) --uefi $@
 	@echo -e "\n\n$@ is built successfully.\n\n"
+	sha1sum $(PRODUCT_OUT)/*.iso > $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION).sha
 
 rpm: $(wildcard $(LOCAL_PATH)/rpm/*) $(BUILT_IMG)
 	@echo ----- Making an rpm ------
