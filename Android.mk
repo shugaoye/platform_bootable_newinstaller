@@ -123,7 +123,7 @@ ifeq ($(USE_GMS),true)
 	GMS := "_gms"
 else ifeq ($(USE_EMU_GAPPS),true)
 	GMS := "_emugapps"
-else ifeq ($(USE_FOSS),true)
+else ifeq ($(USE_FOSS_APPS),true)
 	GMS := "_foss"
 else
 	GMS := ""
