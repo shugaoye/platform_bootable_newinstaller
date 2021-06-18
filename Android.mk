@@ -143,13 +143,25 @@ else
 WDV := ""
 endif
 
+ifneq ("$(wildcard $(PRODUCT_OUT)/gearlock)","")
+GLK := "_gearlock"
+else
+GLK := ""
+endif
+
+ifeq ($(TARGET_ARCH),x86_64)
+IS_ANDROID_X86_64 := true
+else ifeq ($(TARGET_ARCH),x86)
+IS_ANDROID_X86_64 := false
+endif
+
 
 # Use vendor defined version names
 ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-$(TARGET_ARCH)-$(shell date +%Y%m%d%H%M)
 
 BUILD_NAME_VARIANT := $(ROM_VENDOR_VERSION)
 
-ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA)$(GMS)$(HOU)$(WDV).iso
+ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA)$(GMS)$(HOU)$(WDV)$(GLK).iso
 ISOHYBRID := LD_LIBRARY_PATH=$(LOCAL_PATH)/install/lib external/syslinux/bios/utils/isohybrid
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	# Generate Changelog
