@@ -153,7 +153,7 @@ BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
 
 # Grab branch names
-KRNL := $(shell cd $(BUILD_TOP)/kernel ; git branch -l HEAD | cut -d '/' -f2 | tr -d '()')
+KRNL := $(shell cd $(BUILD_TOP)/kernel ; git name-rev --name-only HEAD | cut -d '/' -f3)
 MSA := $(shell cd $(BUILD_TOP)/external/mesa ; git name-rev --name-only HEAD | cut -d '/' -f3)
 HWC := $(shell cd $(BUILD_TOP)/external/drm_hwcomposer ; git name-rev --name-only HEAD | cut -d '/' -f3)
 
