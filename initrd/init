@@ -11,7 +11,16 @@
 PATH=/sbin:/bin:/system/bin:/system/xbin; export PATH
 
 # auto installation
-[ -n "$AUTO_INSTALL" ] && INSTALL=1
+if [ -n "$AUTO_INSTALL" ]; then
+	echo -n "This will replace all operating-systems on this device with a read-only version of this OS. Are you sure you want to continue (y/n)? "
+	read answer
+	if [ "$answer" != "${answer#[Yy]}" ] ;then
+		echo "Booting in Live Mode instead"
+	else
+		echo "Starting Installer"
+		INSTALL=1
+	fi
+fi
 
 # configure debugging output
 if [ -n "$DEBUG" -o -n "$INSTALL" ]; then
