@@ -97,7 +97,46 @@ isolinux_files := $(addprefix external/syslinux/bios/com32/, \
 	elflink/ldlinux/ldlinux.c32 \
 	lib/libcom32.c32 \
 	libutil/libutil.c32 \
-	menu/vesamenu.c32)
+	menu/vesamenu.c32 \
+	modules/cat.c32 \
+    modules/cmd.c32 \
+    modules/config.c32 \
+    modules/cptime.c32 \
+    modules/cpuid.c32 \
+    modules/cpuidtest.c32 \
+    modules/debug.c32 \
+    modules/disk.c32 \
+    modules/dmitest.c32 \
+    modules/elf.c32 \
+    modules/ethersel.c32 \
+    modules/gpxecmd.c32 \
+    modules/hexdump.c32 \
+    modules/host.c32 \
+    modules/ifcpu.c32 \
+    modules/ifcpu64.c32 \
+    modules/ifmemdsk.c32 \
+    modules/ifplop.c32 \
+    modules/kbdmap.c32 \
+    modules/kontron_wdt.c32 \
+    modules/linux.c32 \
+    modules/ls.c32 \
+    modules/meminfo.c32 \
+    modules/pcitest.c32 \
+    modules/pmload.c32 \
+    modules/poweroff.c32 \
+    modules/prdhcp.c32 \
+    modules/pwd.c32 \
+    modules/pxechn.c32 \
+    modules/reboot.c32 \
+    modules/sanboot.c32 \
+    modules/sdi.c32 \
+    modules/vesainfo.c32 \
+    modules/vpdtest.c32 \
+    modules/whichsys.c32 \
+    modules/zzjson.c32 \
+	mboot/mboot.c32 \
+	gfxboot/gfxboot.c32 \
+	gpllib/libgpl.c32)
 
 boot_dir := $(PRODUCT_OUT)/boot
 $(boot_dir): $(shell find $(LOCAL_PATH)/boot -type f | sort -r) $(isolinux_files) $(systemimg) $(INSTALL_RAMDISK) $(GENERIC_X86_CONFIG_MK) | $(ACP)
