@@ -153,7 +153,7 @@ BUILT_IMG := $(addprefix $(PRODUCT_OUT)/,initrd.img install.img) $(systemimg)
 BUILT_IMG += $(if $(TARGET_PREBUILT_KERNEL),$(TARGET_PREBUILT_KERNEL),$(PRODUCT_OUT)/kernel)
 
 # Grab branch names
-KRNL := $(shell cd $(BUILD_TOP)/kernel ; git name-rev --name-only HEAD | cut -d '/' -f3)
+KRNL := $(shell cd $(BUILD_TOP)/kernel ; make kernelversion)
 MSA := $(shell cd $(BUILD_TOP)/external/mesa ; git name-rev --name-only HEAD | cut -d '/' -f3)
 HWC := $(shell cd $(BUILD_TOP)/external/drm_hwcomposer ; git name-rev --name-only HEAD | cut -d '/' -f3)
 
@@ -194,20 +194,16 @@ else ifeq ($(TARGET_ARCH),x86)
 IS_ANDROID_X86_64 := false
 endif
 
-
 # Use vendor defined version names
 ifeq ($(TARGET_PRODUCT),virtualbox)
-KRNL := $(shell cd $(BUILD_TOP)/vbox-kernel ; git name-rev --name-only HEAD | cut -d '/' -f3)
+KRNL := $(shell cd $(BUILD_TOP)/kernel ; make kernelversion)
 ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-vbox-$(shell date +%Y%m%d%H%M)
 else ifeq ($(TARGET_PRODUCT),legacy_pc)
-KRNL := $(shell cd $(BUILD_TOP)/vbox-kernel ; git name-rev --name-only HEAD | cut -d '/' -f3)
+KRNL := $(shell cd $(BUILD_TOP)/kernel ; make kernelversion)
 ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-legacy_pc-$(shell date +%Y%m%d%H%M)
 else
 ROM_VENDOR_VERSION := $(RELEASE_OS_TITLE)-$(TARGET_ARCH)-$(shell date +%Y%m%d%H%M)
 endif
-
-
-
 
 BUILD_NAME_VARIANT := $(ROM_VENDOR_VERSION)
 
