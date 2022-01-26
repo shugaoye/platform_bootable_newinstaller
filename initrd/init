@@ -154,7 +154,7 @@ check_root()
 	else
 		return 1
 	fi
-	echo " found at $1"
+	echo " Found at $1"
 	rm /sbin/mke2fs
 	hash -r
 	text_art
@@ -179,7 +179,10 @@ debug_shell()
 	fi
 }
 
-echo -n Detecting Android-x86...
+echo "Detecting Android-x86..."
+echo ""
+echo "If it took too long to detect, reboot and check your installtion folder"
+echo ""
 
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
 
@@ -203,6 +206,10 @@ while :; do
 	sleep 1
 	echo -n .
 done
+
+if ! grep 'sse4_2' /proc/cpuinfo 1>/dev/null; then {
+  printf 'WARNING: Your CPU does not support SSE4.2 instructions, the OS will not boot\n';
+} fi
 cd /android
 
 ln -s mnt/$SRC /src
