@@ -26,7 +26,7 @@ LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_POST_INSTALL_CMD := $(hide) sed -i "s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)
 include $(BUILD_PREBUILT)
 
-VER ?= $$(date +"%F")
+VER ?= $$(date "+%Y-%m-%d")
 
 # use squashfs for iso, unless explictly disabled
 ifneq ($(USE_SQUASHFS),0)
@@ -207,12 +207,12 @@ endif
 
 BUILD_NAME_VARIANT := $(ROM_VENDOR_VERSION)
 
-ISO_IMAGE := $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION)_k-$(KRNL)_m-$(MSA)$(GMS)$(HOU)$(WDV)$(GLK).iso
+ISO_IMAGE := $(PRODUCT_OUT)/$(BLISS_VERSION).iso
 ISOHYBRID := LD_LIBRARY_PATH=$(LOCAL_PATH)/install/lib external/syslinux/bios/utils/isohybrid
 $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	# Generate Changelog
 	bash bootable/newinstaller/tools/changelog
-	$(hide) mv Changelog.txt $(PRODUCT_OUT)/Changelog-$(BUILD_NAME_VARIANT).txt
+	$(hide) mv Changelog.txt $(PRODUCT_OUT)/Changelog-$(BLISS_VERSION).txt
 	@echo ----- Making iso image ------
 	$(hide) sed -i "s|\(Installation CD\)\(.*\)|\1 $(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</isolinux/isolinux.cfg
 	$(hide) sed -i "s|VER|$(VER)|; s|CMDLINE|$(BOARD_KERNEL_CMDLINE)|" $</efi/boot/android.cfg
@@ -221,7 +221,7 @@ $(ISO_IMAGE): $(boot_dir) $(BUILT_IMG)
 	which xorriso > /dev/null 2>&1 && GENISOIMG="xorriso -as mkisofs" || GENISOIMG=genisoimage; \
 	$$GENISOIMG -vJURT -b isolinux/isolinux.bin -c isolinux/boot.cat \
 		-no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
-		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) $(VER) ($(TARGET_ARCH))" -o $@ $^
+		-input-charset utf-8 -V "$(if $(RELEASE_OS_TITLE),$(RELEASE_OS_TITLE),Android-x86) ($(TARGET_ARCH))" -o $@ $^
 	$(hide) $(ISOHYBRID) --uefi $@
 	@echo -e "\n\n$@ is built successfully.\n\n"
 	sha1sum $(PRODUCT_OUT)/*.iso > $(PRODUCT_OUT)/$(ROM_VENDOR_VERSION).sha
