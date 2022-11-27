@@ -619,6 +619,9 @@ do_install()
 			if [ -e /hd/$asrc/system.sfs ]; then
 				mount -o loop /hd/$asrc/system.sfs /sfs
 				mount -o loop /sfs/system.img system
+			elif [ -e /hd/$asrc/system.efs ]; then
+				mount -o loop /hd/$asrc/system.efs /sfs
+				mount -o loop /sfs/system.img system
 			elif [ -e /hd/$asrc/system.img ]; then
 				mount -o loop /hd/$asrc/system.img system
 			else

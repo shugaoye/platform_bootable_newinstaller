@@ -115,6 +115,12 @@ check_root()
 			mount --move android /sfs
 			mount -o loop,noatime /sfs/system.img android
 		fi
+	elif [ -e /mnt/$SRC/system.efs ]; then
+		mount -o loop,noatime /mnt/$SRC/system.efs android
+		if [ -e android/system.img ]; then
+			mount --move android /sfs
+			mount -o loop,noatime /sfs/system.img android
+		fi
 	elif [ -e /mnt/$SRC/system.img ]; then
 		remount_rw
 		mount -o loop,noatime /mnt/$SRC/system.img android
