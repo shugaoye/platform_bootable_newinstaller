@@ -181,7 +181,7 @@ debug_shell()
 
 echo "Detecting Android-x86..."
 echo ""
-echo "If it took too long to detect, reboot and check your installtion folder"
+echo "If it took too long to detect, reboot and check your installation folder"
 echo ""
 
 [ -z "$SRC" -a -n "$BOOT_IMAGE" ] && SRC=`dirname $BOOT_IMAGE`
