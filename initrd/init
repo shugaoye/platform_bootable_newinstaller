@@ -32,6 +32,21 @@ cat << "EOF"
 EOF
 }
 
+internal_mount()
+{
+	if [ "$INTERNAL_MOUNT" -gt "0" ]; then
+cat << "EOF"
+# WARNING: INTERNAL_MOUNT option is enabled, all the internal partitions 
+# will now being recognized as USBs if the supported filesystem is available 
+# and will create empty directories like Android, DCIM, Documents, etc.
+
+## DO NOT PRESS "TAP TO FIX", IT WILL FORMAT THE DRIVE
+EOF
+
+	mount --bind system/vendor/etc/fstab.internal.x86 $(ls | grep fstab.)
+	fi
+}
+
 # auto installation
 if [ -n "$AUTO_INSTALL" ]; then
 	echo -n "This will replace all operating-systems on this device with a read-only version of this OS. Are you sure you want to continue (y/n)? "
@@ -225,6 +240,8 @@ elif [ -d system/apex/com.android.runtime.release ]; then
 elif [ -d system/apex/com.android.runtime ]; then
 	ln -s ../android/system/apex/com.android.runtime /apex/com.android.runtime
 fi
+
+internal_mount
 
 if [ -n "$INSTALL" ]; then
 	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
