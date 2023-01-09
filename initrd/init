@@ -32,7 +32,7 @@ cat << "EOF"
 EOF
 }
 
-internal_mount()
+bliss_feature()
 {
 	if [ "$INTERNAL_MOUNT" -gt "0" ]; then
 cat << "EOF"
@@ -44,6 +44,20 @@ cat << "EOF"
 EOF
 
 	mount --bind system/vendor/etc/fstab.internal.x86 $(ls | grep fstab.)
+	fi
+
+	# Enabling AOSP features for PC
+	if [ "$PC_MODE" -gt "0" ]; then
+		mount --bind system/etc/hidden_xml/pc.xml system/etc/permissions/pc.xml
+	fi
+
+	if [ "$HPE" -gt "0" ]; then
+		mount --bind system/etc/hidden_xml/hpe.xml system/etc/sysconfig/hpe.xml
+	fi
+
+	# Enable c2.ffmpeg on VINTF Manifest
+	if [ "$FFMPEG_CODEC" -gt "0" ]; then
+	mount --bind system/etc/hidden_xml/manifest_media_c2_V1_1_ffmpeg.xml system/vendor/etc/vintf/manifest/manifest_media_c2_V1_1_ffmpeg.xml
 	fi
 }
 
@@ -241,7 +255,7 @@ elif [ -d system/apex/com.android.runtime ]; then
 	ln -s ../android/system/apex/com.android.runtime /apex/com.android.runtime
 fi
 
-internal_mount
+bliss_feature
 
 if [ -n "$INSTALL" ]; then
 	zcat /src/install.img | ( cd /; cpio -iud > /dev/null )
