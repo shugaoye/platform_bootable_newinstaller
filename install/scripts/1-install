@@ -184,7 +184,7 @@ select_dev()
 	} END {
 		printf("\"\" \"\"\n\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
 	}' > $menufile
-	choose "Choose Partition" "Please select a partition to install $OS_TITLE:\n\nRecommended minimum free space - 4GB  |  Optimum free space >= 8GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
+	choose "Choose Partition" "Please select a partition to install $OS_TITLE:\n\nRecommended minimum free space - 8GB  |  Optimum free space >= 16GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
 	return $retval
 }
 
