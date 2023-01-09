@@ -182,7 +182,7 @@ select_dev()
 			printf("\"\n")
 		}
 	} END {
-		printf("\"\" \"\"\n\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"")
+		printf("\"\" \"\"\n\"Create/Modify partitions\" \"\"\n\"Detect devices\" \"\"\n\"Open command-line shell\" \"\"")
 	}' > $menufile
 	choose "Choose Partition" "Please select a partition to install $OS_TITLE:\n\nRecommended minimum free space - 8GB  |  Optimum free space >= 16GB\n\nPartition | Filesystem | Label            | Size     | Drive name/model"
 	return $retval
@@ -572,6 +572,10 @@ install_hd()
 			;;
 		Detect*)
 			dialog --title " Detecting... " --nocancel --pause "" 8 41 1
+			;;
+		*shell*)
+			dialog --clear --title " WARNING " --nocancel --pause "You are going to use AOSP's shell, if you want to go back to the installer please type exit" 12 41 8
+			/system/bin/sh 2>&1
 			;;
 		*)
 			install_to $choice
