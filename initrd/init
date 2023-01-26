@@ -48,15 +48,28 @@ EOF
 
 	# Enabling AOSP features for PC
 	if [ "$PC_MODE" -gt "0" ]; then
+cat << "EOF"
+# WARNING: PC_MODE will not working once Magisk or KernelSU modules are installed.
+# Visit BlissOS wiki for more info & solution
+EOF
 		mount --bind system/etc/hidden_xml/pc.xml system/etc/permissions/pc.xml
 	fi
 
 	if [ "$HPE" -gt "0" ]; then
+cat << "EOF"
+# WARNING: HPE will not working once Magisk or KernelSU modules are installed.
+# Visit BlissOS wiki for more info & solution
+EOF
 		mount --bind system/etc/hidden_xml/hpe.xml system/etc/sysconfig/hpe.xml
 	fi
 
 	# Enable c2.ffmpeg on VINTF Manifest
 	if [ "$FFMPEG_CODEC" -gt "0" ]; then
+cat << "EOF"
+# WARNING: c2.ffmpeg will not list on VINTF manifest list once Magisk
+# or KernelSU modules are installed.
+# Visit BlissOS wiki for more info & solution
+EOF
 	mount --bind system/etc/hidden_xml/manifest_media_c2_V1_1_ffmpeg.xml system/vendor/etc/vintf/manifest/manifest_media_c2_V1_1_ffmpeg.xml
 	fi
 }
