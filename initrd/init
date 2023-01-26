@@ -83,6 +83,7 @@ device_information()
 	PRODUCT_VER=$(cat $DMIPATH/product_version)
 	UEVENT=$(cat $DMIPATH/uevent)
 	VENDOR=$(cat $DMIPATH/sys_vendor)
+	SERIALNO=$(cat $DMIPATH/product_serial)
 
 	touch /tmp/device.prop
 
@@ -101,8 +102,16 @@ device_information()
 	echo ro.product.bliss.manufacturer="$(cat $DMIPATH/board_vendor)" >> /tmp/device.prop
 	echo ro.product.bliss.model="$BOARD" >> /tmp/device.prop
 	echo ro.product.board="$BOARD" >> /tmp/device.prop
-	echo ro.serialno="$(cat $DMIPATH/product_serial)" >> /tmp/device.prop
 
+	case "$SERIALNO" in
+		*To*be*filled* | *" "* | "" | 0)
+			echo "#No serial number or incompatiable serial number detected"
+		;;
+		*)
+			echo ro.serialno="$SERIALNO" >> /tmp/device.prop
+			echo ro.boot.serialno="$SERIALNO" >> /tmp/device.prop
+		;;
+	esac
 	mount --bind /tmp/device.prop system/vendor/etc/device.prop
 }
 
