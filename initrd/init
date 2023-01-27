@@ -105,7 +105,7 @@ device_information()
 
 	case "$SERIALNO" in
 		*To*be*filled* | *" "* | "" | 0)
-			echo "#No serial number or incompatiable serial number detected"
+			echo "No serial number or incompatiable serial number detected"
 		;;
 		*)
 			echo ro.serialno="$SERIALNO" >> /tmp/device.prop
