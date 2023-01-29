@@ -102,16 +102,7 @@ device_information()
 	echo ro.product.bliss.manufacturer="$(cat $DMIPATH/board_vendor)" >> /tmp/device.prop
 	echo ro.product.bliss.model="$BOARD" >> /tmp/device.prop
 	echo ro.product.board="$BOARD" >> /tmp/device.prop
-
-	case "$SERIALNO" in
-		*To*be*filled* | *" "* | "" | 0)
-			echo "No serial number or incompatiable serial number detected"
-		;;
-		*)
-			echo ro.serialno="$SERIALNO" >> /tmp/device.prop
-			echo ro.boot.serialno="$SERIALNO" >> /tmp/device.prop
-		;;
-	esac
+	echo ro.bliss.serialnumber="$SERIALNO" >> /tmp/device.prop
 	mount --bind /tmp/device.prop system/vendor/etc/device.prop
 }
 
